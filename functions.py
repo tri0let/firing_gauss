@@ -63,3 +63,4 @@ def fastplot(data,
     if download == True:
         plt.savefig(filename, bbox_inches="tight")
         # files.download(f'{filename}.png')
+
