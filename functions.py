@@ -36,6 +36,7 @@ def fastplot(xdata: None | list | np.typing.NDArray=None,
               download: bool=False,
               datalabel: str="Data",
               legend: bool=True,
+              grid: bool=False,
               yerr: None | list | np.typing.NDArray=None,
               index: int=1,
               figsize: tuple=(4,4),
@@ -65,6 +66,7 @@ def fastplot(xdata: None | list | np.typing.NDArray=None,
     ax = plt.gca()
     ax.set_xlim(xrange)
     ax.set_ylim(yrange)
+    plt.grid(grid)
     plt.xlabel(xlab)
     plt.ylabel(ylab)
     if Title != None:
