@@ -22,7 +22,35 @@ def weighted_mean(list):        #takes a list of ordered pairs of the form (mean
         avg += i[0]/i[1]**2
     avg = avg/sigma2
     return avg, 1/(sigma2)**0.5
+    
+# ================= CHI-SQUARE FUNCTIONS ============
+def chi-square(y_obs, y_exp, yerr): # Calculates the chi-square
+    y_obs = np.asarray(y_obs, dtype=float)
+    y_exp = np.asarray(y_exp, dtype=float)
+    yerr = np.asarray(yerr, dtype=float)
+    mask = (~np.isnan(y_obs)) & (~np.isnan(y_exp)) & (~np.isnan(yerr)) & (yerr > 0)
+    y_obs = y_obs[mask]
+    y_exp = y_exp[mask]
+    yerr = yerr [mask]
+    return np.sum(((y_obs, y_exp)/ yerr)**2
 
+def red_chi_square(y_obs, y_exp, yerr, n_params): # Calculates the reduced chi-square 
+    y_obs = np.assaray(y_obs, dtype=float)
+    y_exp = np.asarray(y_exp, dtype=float)
+    yerr = np.asarray(yerr,dtype=float)
+    mask = (~np.isnan(y_obs)) & (~np.isnan(y_exp)) & (~np.isnan(yerr)) & (yerr > 0)
+    N = np.sum(mask)
+    dof = N - n_params
+    if dof <= 0:
+        return np.nan
+    chi2 = chi_square(y_obs, y_exp, yerr)
+    return chi2/dof
+    
+def residuals(y_obs, y_exp): # Returns residuals: observed - expected
+    y_obs = np.asarray (y_obs, dtype=float)
+    y_exp = np.asarray (y_exp, dtype=float)
+    return y_obs - y_exp 
+    
 # ================ QUICKLY PLOT DATA =================
 
 def fastplot(xdata: None | list | np.typing.NDArray=None,
