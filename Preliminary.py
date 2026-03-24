@@ -5,7 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 # =========== Settings ========
-file_pattern = "*force*.csv"
+file_pattern = "csv_data/*force*.csv"
 time_column_base = "Time (s)"
 force_column_base = "Force (N)"
 

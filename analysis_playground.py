@@ -11,8 +11,8 @@ import numpy as np
 #========== Plotting force over distance using March 19th data ==========
 
 
-force_1_to_11 = extract_trials_from_file('03-19-2026_force_measurements_1-11_[force_time_x11].csv')
-force_12_to_16 = extract_trials_from_file('3-19-2026_force_measurement_12-16_[force_time_x4].csv')
+force_1_to_11 = extract_trials_from_file('csv_data/03-19-2026_force_measurements_1-11_[force_time_x11].csv')
+force_12_to_16 = extract_trials_from_file('csv_data/3-19-2026_force_measurement_12-16_[force_time_x4].csv')
 
 distance1 = [7.52, 7.02, 6.52, 6.02, 5.02]
 distance2 = [12.48, 11.98, 11.48, 10.48, 9.48]
@@ -59,7 +59,7 @@ fastplot(distance3, force3, yerr=err3, Title='Four magnets', xlab='Distance (mm)
 
 num_magnets = [1, 2, 4, 8]
 
-pull_force = extract_trials_from_file('3-23-2026_magnetic_pull_data[force_time_x5].csv')
+pull_force = extract_trials_from_file('csv_data/3-23-2026_magnetic_pull_data[force_time_x5].csv')
 
 force = []
 error = []
