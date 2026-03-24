@@ -116,7 +116,7 @@ def stats(f_val):
         "noise_rms": noise_rms, 
     }
         
-        
+      
 # =========== Extract all trials in the file ============
 def extract_trials_from_file(file_path):
 
@@ -185,8 +185,11 @@ def combine_trials(trials):
                 on="time",
                 how="outer"            
             )
-
-    combine_dataframe = combine_dataframe.sort_values("time")
+    if combine_dataframe is not None:
+        combine_dataframe = combine_dataframe.sort_values("time")
+    else: 
+        print("Trials could not be combined, combine_dataframe not created!")
+        return None
     
     force_column = [
         column for column in combine_dataframe.columns

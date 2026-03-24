@@ -104,6 +104,7 @@ def fastplot(xdata: None | list | np.typing.NDArray=None,
         plt.title(Title)
     if download == True:
         plt.savefig(filename, bbox_inches="tight")
+    plt.show()
 
 #  Colour Dictionary Palette 
 COL = {
@@ -272,36 +273,36 @@ def point_to_point_noise(y):
 
 # ================= MAIN SCRIPT ==================
 
-x, y, yerr = generate_random_data()
-# ----- Linear fit -----
-m_lin, m_lin_err, y_fit_lin, res_lin, chi2_lin, chi2_red_lin = fit(
-    linear_model, x, y, yerr, "Linear Fit")
-# ----- Quadratic fit -----
-a_quad, a_quad_err, y_fit_quad, res_quad, chi2_quad, chi2_red_quad =fit(
-    quadratic_model, x, y, yerr, "Quadratic Fit"
-)
-# Noise analysis
-noise_analysis(y_fit_lin, res_lin, "Linear Fit")
-noise_analysis(y_fit_quad, res_quad, "Quadratic Fit")
+# x, y, yerr = generate_random_data()
+# # ----- Linear fit -----
+# m_lin, m_lin_err, y_fit_lin, res_lin, chi2_lin, chi2_red_lin = fit(
+#     linear_model, x, y, yerr, "Linear Fit")
+# # ----- Quadratic fit -----
+# a_quad, a_quad_err, y_fit_quad, res_quad, chi2_quad, chi2_red_quad =fit(
+#     quadratic_model, x, y, yerr, "Quadratic Fit"
+# )
+# # Noise analysis
+# noise_analysis(y_fit_lin, res_lin, "Linear Fit")
+# noise_analysis(y_fit_quad, res_quad, "Quadratic Fit")
 
-# ======= Fit Results Summary =======
+# # ======= Fit Results Summary =======
 
-print("\n--- Linear Fit ---")
-print("chi^2 =", chi2_lin)
-print("Reduced chi^2 =", chi2_red_lin)
+# print("\n--- Linear Fit ---")
+# print("chi^2 =", chi2_lin)
+# print("Reduced chi^2 =", chi2_red_lin)
 
-print("\n--- Quadratic Fit ---")
-print("chi^2 =", chi2_quad)
-print("Reduced chi^2 =", chi2_red_quad)
+# print("\n--- Quadratic Fit ---")
+# print("chi^2 =", chi2_quad)
+# print("Reduced chi^2 =", chi2_red_quad)
 
-# ======================= PLOT DATA AND RESIDUALS ==========================
+# # ======================= PLOT DATA AND RESIDUALS ==========================
 
-fig, axes = plt.subplots(2, 2, figsize=(12, 8))
-plot_fit(x, y, yerr, y_fit_lin, res_lin, "Linear Fit", COL["linear_fit"], (axes[0,0], axes[0,1]))
-plot_fit(x, y, yerr, y_fit_quad, res_quad, "Quadratic Fit", COL["quadratic_fit"], (axes[1,0], axes[1,1]))
-plt.tight_layout()
-plt.show()
-# Histogram plots
-plot_histograms(res_lin, res_quad)
-# Point-to-point noise
-point_to_point_noise(y)
+# fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+# plot_fit(x, y, yerr, y_fit_lin, res_lin, "Linear Fit", COL["linear_fit"], (axes[0,0], axes[0,1]))
+# plot_fit(x, y, yerr, y_fit_quad, res_quad, "Quadratic Fit", COL["quadratic_fit"], (axes[1,0], axes[1,1]))
+# plt.tight_layout()
+# plt.show()
+# # Histogram plots
+# plot_histograms(res_lin, res_quad)
+# # Point-to-point noise
+# point_to_point_noise(y)
