@@ -1,4 +1,4 @@
-**Calibration measurement "(03-17-2026_caliper_calibration_[force_time_x18].csv)"**:
+**Calibration measurement (03-17-2026_caliper_calibration_[force_time_x18].csv)**:
 
 - Hung the magnet from a string at a fixed height (attached to the force gauge)
 - Three measurements:
