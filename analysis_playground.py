@@ -137,10 +137,11 @@ def PeakForces(paths: list[str] | str, distance: int=50, prominence: float=0.2, 
 
 
 dict = PeakForces('csv_data/03-24-2026_magneti_pull_data[force_timex11].csv', included_runs=[2, 3, 4, 5, 6], plot=False, prominence=0.15)
-dict1 = PeakForces('csv_data/3-23-2026_magnetic_pull_data[force_time_x5].csv', included_runs=[1])
+dict1 = PeakForces('csv_data/03-24-2026_magnetic_pull_data2[force_timex10].csv', included_runs=[12, 13, 14, 15, 16])
 
 force = dict['mean']
-error = dict['error']
+
+force1 = dict1['mean']
 
 
 err = []
@@ -148,8 +149,13 @@ err = []
 for e, n in zip(dict['error'], dict['noise']):
     err.append(max(e, n))
 
-for t, r in zip(dict['times'], dict['runs']):
-    print(f'Peak times for run {r}:    {t}')
+err1 = []
+
+for e, n in zip(dict1['error'], dict1['noise']):
+    err1.append(max(e, n))
+
+# for t, r in zip(dict['times'], dict['runs']):
+#     print(f'Peak times for run {r}:    {t}')
 
 dist = [0.35, 0.67, 1.29, 1.93, 2.57]
 
@@ -165,7 +171,9 @@ print(param_err)
 print(chi2)
 # fastplot(residuals, yerr=err)
 
-plt.plot(dist, y_fit)
-plt.errorbar(np.array(dist), np.array(force), yerr=err, fmt='o')
+# plt.plot(dist, y_fit)
+plt.errorbar(np.array(dist), np.array(force), yerr=err, fmt='o', label='One magnet')
+plt.errorbar(np.array(dist), np.array(force1), yerr=err1, fmt='o', label='Two magnets')
+plt.legend()
 plt.show()
 
