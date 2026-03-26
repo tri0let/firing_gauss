@@ -367,7 +367,7 @@ def PeakForces(paths,
                distance=50,
                prominence=0.2,
                plot=False,
-               included_runs=None):dict->
+               included_runs=None) -> dict:
 
     runs = []
     num_peaks = []
