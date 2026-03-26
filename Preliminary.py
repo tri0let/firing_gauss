@@ -363,7 +363,12 @@ def plot_between_trial_noise(combined, file_label):
     plt.tight_layout()
 
 
-def PeakForces(paths: list[str] | str, distance: int=50, prominence: float=0.2, plot: bool=False, included_runs: list[int] | None=None) -> dict:
+def PeakForces(paths,
+               distance=50,
+               prominence=0.2,
+               plot=False,
+               included_runs=None):dict->
+
     runs = []
     num_peaks = []
     forces = []
@@ -375,33 +380,57 @@ def PeakForces(paths: list[str] | str, distance: int=50, prominence: float=0.2, 
 
     if not isinstance(paths, list):
         paths = [paths]
-    
+
     for path in paths:
         pull_force = extract_trials_from_file(path)
 
         for trial in pull_force:
 
-            if included_runs is not None:
-                if trial['run'] not in included_runs:
-                    continue
+            if included_runs is not None and trial['run'] not in included_runs:
+                continue
 
             raw_data.append(trial)
 
-            indices, properties = find_peaks(trial['force'], distance=distance, prominence=prominence)
+            indices, _ = find_peaks(
+                trial['force'],
+                distance=distance,
+                prominence=prominence
+            )
+
             if len(indices) == 0:
-                raise ValueError('No peaks found!')
+                raise ValueError(f'No peaks found in run {trial["run"]}!')
+
+            run_id = int(trial['run'])
+
+            if run_id in REMOVE_PEAKS and len(REMOVE_PEAKS[run_id]) > 0:
+                bad_peak_positions = sorted(set(REMOVE_PEAKS[run_id]))
+                mask = np.ones(len(indices), dtype=bool)
+
+                for pos in bad_peak_positions:
+                    if 0 <= pos < len(indices):
+                        mask[pos] = False
+
+                indices = indices[mask]
+
+            if len(indices) == 0:
+                raise ValueError(f'All peaks were removed in run {trial["run"]}!')
+
             peak_forces = trial['force'][indices]
             peak_times = trial['time'][indices]
 
             if plot:
                 fastplot(trial['time'], trial['force'], Title=f"Run #{trial['run']}")
 
-            runs.append(trial['run'])
-            num_peaks.append(len(indices))
-            forces.append(peak_forces)
-            times.append(peak_times)
-            mean.append(np.mean(peak_forces))
-            error.append(np.std(peak_forces)/np.sqrt(len(peak_forces)))
+            runs.append(int(trial['run']))
+            num_peaks.append(int(len(indices)))
+            forces.append(np.array(peak_forces, dtype=float))
+            times.append(np.array(peak_times, dtype=float))
+
+            mean_force = float(np.mean(peak_forces))
+            peak_error = float(np.std(peak_forces) / np.sqrt(len(peak_forces)))
+
+            mean.append(mean_force)
+            error.append(peak_error)
 
             noise_index = 0
             i = 0
@@ -412,13 +441,20 @@ def PeakForces(paths: list[str] | str, distance: int=50, prominence: float=0.2, 
                 i += 1
 
             noise_index = i
-
-            noise_floor = np.std(trial['force'][0:noise_index + 1])
+            noise_floor = float(np.std(trial['force'][0:noise_index + 1]))
 
             if plot:
-                fastplot(trial['time'][0:noise_index + 1], trial['force'][0:noise_index + 1], Title=f"Run #{trial['run']} five second noise")
-
+                fastplot(
+                    trial['time'][0:noise_index + 1],
+                    trial['force'][0:noise_index + 1],
+                    Title=f"Run #{trial['run']} five second noise"
+                )
             noise.append(noise_floor)
+    return {'raw_data': raw_data,'forces': forces, 'times': times, 'mean': mean,'error': error,'noise': noise,'runs': runs, 'num_peaks': num_peaks}
 
-    return {'raw_data': raw_data, 'forces': forces, 'times': times, 'mean': mean, 'error': error, 'noise': noise, 'runs': runs, 'num_peaks': num_peaks}
+
+# ========================= PEAK REMOVAL =========================
+
+REMOVE_PEAKS = {
+    12: [0],14: [2],20: [1, 4],16: [9],22: [3,7],23: [2,5],24: [2,10],25: [0],39: [2, 8, 10, 12],40:[7,8],60:[5]}
     
