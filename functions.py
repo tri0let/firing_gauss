@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.optimize import curve_fit
+from inspect import signature
 
 # ============ IMPORT DATA FROM .CSV FILE ============
 
@@ -142,18 +143,33 @@ def generate_random_data(seed=10):
 
 # ======================== Fit Models =================================
 # This function performs the fit and also computes residuals and chi-square
-def fit(model, x, y, yerr, label):
+def fit(model, x, y, yerr, label, param_guesses: list = []):
+    if len(param_guesses) > len(signature(model).parameters) - 1:
+        raise ValueError('Too many parameters in guess!')
+    while len(param_guesses) < len(signature(model).parameters) - 1:
+        param_guesses.append(0.0)
+    if len(param_guesses) == len(signature(model).parameters) - 1:
+        p0 = param_guesses
+    else:
+        raise ValueError('Failed to make number of guesses equal to number of parameters')
     popt, pcov = curve_fit(
-        model,
-        x,
-        y,
+        f=model,
+        xdata=x,
+        ydata=y,
         sigma=yerr,
+        p0=p0,
         absolute_sigma=True
     )
     # fitted parameters
     params = popt
+    param_names = list(signature(model).parameters.keys())[1:]
+
+    param_dict = {name: param for name, param in zip(param_names, params)}
+
     # parameter uncertainties from covariance matrix
     param_err = np.sqrt(np.diag(pcov))
+
+    err_dict = {f'Error in {name}': err for name, err in zip(param_names, param_err)}
     # fitted curve
     y_fit = model(x, *popt)
     # residuals
@@ -162,7 +178,7 @@ def fit(model, x, y, yerr, label):
     chi2 = np.sum((residuals / yerr) ** 2)
     dof = len(x) - len(popt)
     chi2_red = chi2 / dof
-    return params, param_err, y_fit, residuals, chi2, chi2_red
+    return param_dict, err_dict, y_fit, residuals, chi2, chi2_red
 
 # ========= Noise Analysis ======== 
 # Not sure yet if this is the best way to estimate noise
