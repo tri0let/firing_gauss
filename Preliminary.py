@@ -363,11 +363,64 @@ def plot_between_trial_noise(combined, file_label):
     plt.tight_layout()
 
 
+# ========================= PEAK REMOVAL =========================
+
+REMOVE_PEAKS = {
+    'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv': {
+        12: [0],
+        14: [2],
+        20: [1, 4],
+    },
+    'csv_data/03-24-2026_magnetic_pull_data2[force_timex10].csv': {
+        16: [9],
+    },
+    'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv': {
+        22: [3, 7],
+        23: [2, 5],
+        24: [2, 10],
+        25: [0],
+        39: [2, 8, 10, 12],
+        40: [7, 8],
+        60: [5],
+    }
+}
+
+
+def get_bad_peak_positions(path, run_id):
+    file_rules = REMOVE_PEAKS.get(path, {})
+    return sorted(set(file_rules.get(run_id, [])))
+
+
+def remove_bad_peaks(indices, bad_peak_positions):
+    if not bad_peak_positions:
+        return indices
+
+    mask = np.ones(len(indices), dtype=bool)
+
+    for pos in bad_peak_positions:
+        if 0 <= pos < len(indices):
+            mask[pos] = False
+
+    return indices[mask]
+
+
+def check_requested_runs_exist(path, requested_runs):
+    if not requested_runs:
+        return [], []
+
+    pull_force = extract_trials_from_file(path)
+    found_runs = sorted(int(trial['run']) for trial in pull_force)
+    missing = [r for r in requested_runs if r not in found_runs]
+    return found_runs, missing
+
+
+# ========================= PEAK FORCE  =========================
+
 def PeakForces(paths,
                distance=50,
                prominence=0.2,
                plot=False,
-               included_runs=None) -> dict:
+               included_runs=None):
 
     runs = []
     num_peaks = []
@@ -377,6 +430,7 @@ def PeakForces(paths,
     error = []
     noise = []
     raw_data = []
+    source_files = []
 
     if not isinstance(paths, list):
         paths = [paths]
@@ -385,11 +439,13 @@ def PeakForces(paths,
         pull_force = extract_trials_from_file(path)
 
         for trial in pull_force:
+            run_id = int(trial['run'])
 
-            if included_runs is not None and trial['run'] not in included_runs:
+            if included_runs is not None and run_id not in included_runs:
                 continue
 
             raw_data.append(trial)
+            source_files.append(path)
 
             indices, _ = find_peaks(
                 trial['force'],
@@ -398,36 +454,35 @@ def PeakForces(paths,
             )
 
             if len(indices) == 0:
-                raise ValueError(f'No peaks found in run {trial["run"]}!')
+                raise ValueError(f'No peaks found in file {path}, run {run_id}!')
 
-            run_id = int(trial['run'])
-
-            if run_id in REMOVE_PEAKS and len(REMOVE_PEAKS[run_id]) > 0:
-                bad_peak_positions = sorted(set(REMOVE_PEAKS[run_id]))
-                mask = np.ones(len(indices), dtype=bool)
-
-                for pos in bad_peak_positions:
-                    if 0 <= pos < len(indices):
-                        mask[pos] = False
-
-                indices = indices[mask]
+            bad_peak_positions = get_bad_peak_positions(path, run_id)
+            indices = remove_bad_peaks(indices, bad_peak_positions)
 
             if len(indices) == 0:
-                raise ValueError(f'All peaks were removed in run {trial["run"]}!')
+                raise ValueError(f'All peaks were removed in file {path}, run {run_id}!')
 
             peak_forces = trial['force'][indices]
             peak_times = trial['time'][indices]
 
             if plot:
-                fastplot(trial['time'], trial['force'], Title=f"Run #{trial['run']}")
+                fig, ax = plt.subplots(figsize=(8, 4))
+                ax.plot(trial['time'], trial['force'])
+                ax.plot(peak_times, peak_forces, 'o')
+                ax.set_title(f"{os.path.basename(path)} | Run #{run_id}")
+                ax.set_xlabel('Time')
+                ax.set_ylabel('Force')
+                ax.grid(alpha=0.25)
+                plt.tight_layout()
+                plt.show()
 
-            runs.append(int(trial['run']))
+            runs.append(run_id)
             num_peaks.append(int(len(indices)))
             forces.append(np.array(peak_forces, dtype=float))
             times.append(np.array(peak_times, dtype=float))
 
             mean_force = float(np.mean(peak_forces))
-            peak_error = float(np.std(peak_forces) / np.sqrt(len(peak_forces)))
+            peak_error = float(np.std(peak_forces) / np.sqrt(len(peak_forces))) if len(peak_forces) > 1 else 0.0
 
             mean.append(mean_force)
             error.append(peak_error)
@@ -435,7 +490,7 @@ def PeakForces(paths,
             noise_index = 0
             i = 0
 
-            while noise_index == 0 and i < min(indices) - 1:
+            while noise_index == 0 and i < max(0, min(indices) - 1):
                 if trial['time'][i] >= 5:
                     noise_index = i
                 i += 1
@@ -443,18 +498,17 @@ def PeakForces(paths,
             noise_index = i
             noise_floor = float(np.std(trial['force'][0:noise_index + 1]))
 
-            if plot:
-                fastplot(
-                    trial['time'][0:noise_index + 1],
-                    trial['force'][0:noise_index + 1],
-                    Title=f"Run #{trial['run']} five second noise"
-                )
             noise.append(noise_floor)
-    return {'raw_data': raw_data,'forces': forces, 'times': times, 'mean': mean,'error': error,'noise': noise,'runs': runs, 'num_peaks': num_peaks}
 
-
-# ========================= PEAK REMOVAL =========================
-
-REMOVE_PEAKS = {
-    12: [0],14: [2],20: [1, 4],16: [9],22: [3,7],23: [2,5],24: [2,10],25: [0],39: [2, 8, 10, 12],40:[7,8],60:[5]}
+    return {
+        'raw_data': raw_data,
+        'source_files': source_files,
+        'forces': forces,
+        'times': times,
+        'mean': mean,
+        'error': error,
+        'noise': noise,
+        'runs': runs,
+        'num_peaks': num_peaks
+    }
     
