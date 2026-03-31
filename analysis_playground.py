@@ -8,7 +8,7 @@ from scipy.signal import find_peaks
 import numpy as np
 
 
-dict = PeakForces('csv_data/03-24-2026_magneti_pull_data[force_timex11].csv', included_runs=[2, 3, 4, 5, 6], plot=False, prominence=0.15)
+dict = PeakForces('csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', included_runs=[2, 3, 4, 5, 6], plot=False, prominence=0.15)
 dict1 = PeakForces('csv_data/03-24-2026_magnetic_pull_data2[force_timex10].csv', included_runs=[12, 13, 14, 15, 16])
 dict0 = PeakForces('csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', included_runs=[51])
 
@@ -52,7 +52,19 @@ def f_1(x, a, h):
 def f_2(z, C, a, h):
     return C * (((z - h + 1.27) / np.sqrt((z - h + 1.27)**2 + a**2))-((z - h - 1.27) / np.sqrt((z - h - 1.27)**2 + a**2)))
 
-params, param_err, y_fit, residuals, chi2, chi2_red = fit(model=f_2, x=dist, y=force, yerr=err, label='blue')
+def f_3(z, C, a, h):
+    return C * ((-1.27 - h + z)**2/(a**2 + (-1.27 - h + z)**2)**(3/2) - 1/np.sqrt(a**2 + (-1.27 - h + z)**2) + 1/np.sqrt(a**2 + (1.27 - h + z)**2) - (1.27 - h + z)**2/(a**2 + (1.27 - h + z)**2)**(3/2))
+
+def f_4(z, C, a, h, b):
+    return C * ((-b - h + z)**2/(a**2 + (-b - h + z)**2)**(3/2) - 1/np.sqrt(a**2 + (-b - h + z)**2) + 1/np.sqrt(a**2 + (b - h + z)**2) - (b - h + z)**2/(a**2 + (b - h + z)**2)**(3/2))
+
+def f_5(z, C, a, h, b):
+    return C * ((-b - h + z)**2/(a**2 + (-b - h + z)**2)**(3/2) - 1/np.sqrt(a**2 + (-b - h + z)**2) + 1/np.sqrt(a**2 + (b - h + z)**2) - (b - h + z)**2/(a**2 + (b - h + z)**2)**(3/2)) * (((z - h + b) / np.sqrt((z - h + b)**2 + a**2))-((z - h - b) / np.sqrt((z - h - b)**2 + a**2)))
+
+def f_6(z, C, h):
+    return C * ((-1.27 - h + z)**2/(3.17**2 + (-1.27 - h + z)**2)**(3/2) - 1/np.sqrt(3.17**2 + (-1.27 - h + z)**2) + 1/np.sqrt(3.17**2 + (1.27 - h + z)**2) - (1.27 - h + z)**2/(3.17**2 + (1.27 - h + z)**2)**(3/2)) * (((z - h + 1.27) / np.sqrt((z - h + 1.27)**2 + 3.17**2))-((z - h - 1.27) / np.sqrt((z - h - 1.27)**2 + 3.17**2)))
+
+params, param_err, y_fit, residuals, chi2, chi2_red = fit(model=f_6, x=dist, y=force, yerr=err, label='blue', param_guesses=[13, -2])
 
 print(params)
 print(param_err)
