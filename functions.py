@@ -287,6 +287,13 @@ def point_to_point_noise(y):
     ptp_noise = np.std(diff_y) / np.sqrt(2)
     print("\nEstimated point-to-point noise:", ptp_noise)
 
+
+# ============================ Derivative of a scalar function ============================
+
+def derivative(func, a: float, N: int=10, dx: float=1):
+    x_list = np.arange(a - N * dx, a + N * dx, dx)
+    return np.gradient(func(x_list), dx)[N]
+
 # ================= MAIN SCRIPT ==================
 
 # x, y, yerr = generate_random_data()

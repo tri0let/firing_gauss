@@ -85,3 +85,5 @@ ax.set_xlabel('Distance to magnet surface (m)')
 ax.set_ylabel('Force (N)')
 ax.legend()
 plt.show()
+
+C, h = params.values()
