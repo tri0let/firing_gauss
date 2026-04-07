@@ -15,24 +15,100 @@ def ConservativeError(data_dict):
 def linear_model(x, m, b):
     return m * x + b
 
+def power_model(x, a, b):
+    return a * x**b
+
 n = 1
 
 def f_1(x, a, h):
-    x = np.array(x, dtype=float)
+    x = np.asarray(x, dtype=np.float64)
+    a = float(a)
+    h = float(h)
     return a / (x - h)**n
 
 def f_2(z, C, a, h):
-    z = np.array(z, dtype=float)
+    z = np.asarray(z, dtype=np.float64)
+    C = float(C)
+    a = float(a)
+    h = float(h)
     return C * (
         ((z - h + 1.27) / np.sqrt((z - h + 1.27)**2 + a**2))
         - ((z - h - 1.27) / np.sqrt((z - h - 1.27)**2 + a**2))
     )
 
+def f_3(z, C, a, h):
+    z = np.asarray(z, dtype=np.float64)
+    C = float(C)
+    a = float(a)
+    h = float(h)
+    return C * (
+        ((-1.27 - h + z)**2 / (a**2 + (-1.27 - h + z)**2)**1.5)
+        - 1.0 / np.sqrt(a**2 + (-1.27 - h + z)**2)
+        + 1.0 / np.sqrt(a**2 + (1.27 - h + z)**2)
+        - ((1.27 - h + z)**2 / (a**2 + (1.27 - h + z)**2)**1.5)
+    )
+
+def f_4(z, C, a, h, b):
+    z = np.asarray(z, dtype=np.float64)
+    C = float(C)
+    a = float(a)
+    h = float(h)
+    b = float(b)
+    return C * (
+        ((-b - h + z)**2 / (a**2 + (-b - h + z)**2)**1.5)
+        - 1.0 / np.sqrt(a**2 + (-b - h + z)**2)
+        + 1.0 / np.sqrt(a**2 + (b - h + z)**2)
+        - ((b - h + z)**2 / (a**2 + (b - h + z)**2)**1.5)
+    )
+
+def f_5(z, C, a, h, b):
+    z = np.asarray(z, dtype=np.float64)
+    C = float(C)
+    a = float(a)
+    h = float(h)
+    b = float(b)
+
+    term1 = (
+        ((-b - h + z)**2 / (a**2 + (-b - h + z)**2)**1.5)
+        - 1.0 / np.sqrt(a**2 + (-b - h + z)**2)
+        + 1.0 / np.sqrt(a**2 + (b - h + z)**2)
+        - ((b - h + z)**2 / (a**2 + (b - h + z)**2)**1.5)
+    )
+
+    term2 = (
+        ((z - h + b) / np.sqrt((z - h + b)**2 + a**2))
+        - ((z - h - b) / np.sqrt((z - h - b)**2 + a**2))
+    )
+
+    return C * term1 * term2
+
+def f_6(z, C, h):
+    z = np.asarray(z, dtype=np.float64)
+    C = float(C)
+    h = float(h)
+    a = 3.17
+    b = 1.27
+
+    term1 = (
+        ((-b - h + z)**2 / (a**2 + (-b - h + z)**2)**1.5)
+        - 1.0 / np.sqrt(a**2 + (-b - h + z)**2)
+        + 1.0 / np.sqrt(a**2 + (b - h + z)**2)
+        - ((b - h + z)**2 / (a**2 + (b - h + z)**2)**1.5)
+    )
+
+    term2 = (
+        ((z - h + b) / np.sqrt((z - h + b)**2 + a**2))
+        - ((z - h - b) / np.sqrt((z - h - b)**2 + a**2))
+    )
+
+    return C * term1 * term2
+
+# ========================= FIT FUNCTION =========================
 # ========================= FIT FUNCTION =========================
 def FitSituation(x, data_dict, model='linear'):
-    x = np.array(x, dtype=float)
-    y = np.array(data_dict['mean'], dtype=float)
-    yerr = np.array(ConservativeError(data_dict), dtype=float)
+    x = np.asarray(x, dtype=np.float64)
+    y = np.asarray(data_dict['mean'], dtype=np.float64)
+    yerr = np.asarray(ConservativeError(data_dict), dtype=np.float64)
 
     if len(x) != len(y):
         raise ValueError(f'Length mismatch: len(x)={len(x)} but len(y)={len(y)}')
@@ -45,36 +121,72 @@ def FitSituation(x, data_dict, model='linear'):
         bounds = (-np.inf, np.inf)
         param_names = ['m', 'b']
 
+    elif model == 'power':
+        fit_function = power_model
+        p0 = [1.0, 1.0]   # a = scale, b = exponent
+        bounds = ([0, -np.inf], [np.inf, np.inf])  # a > 0
+        param_names = ['a', 'b']
+
+    
     elif model == 'f_1':
         fit_function = f_1
-
-        # Safer initial guesses
         a0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
-
-        # Put h outside the x-range to avoid division by zero at start
         x_min = np.min(x)
         x_max = np.max(x)
         span = x_max - x_min if x_max > x_min else 1.0
         h0 = x_min - 0.5 * span
-
         p0 = [a0, h0]
-
-        # Keep h away from the data interval so x-h does not hit zero
         bounds = (
             [-np.inf, -np.inf],
             [ np.inf, x_min - 1e-6]
         )
-
         param_names = ['a', 'h']
 
     elif model == 'f_2':
         fit_function = f_2
-        C0 = float(np.max(y)) if len(y) > 0 else 1.0
-        a0 = 0.5
-        h0 = float(x[np.argmax(y)]) if len(x) > 0 else 0.0
+        C0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
+        a0 = 3.17
+        h0 = float(x[np.argmax(np.abs(y))]) if len(x) > 0 else 0.0
         p0 = [C0, a0, h0]
         bounds = ([-np.inf, 1e-8, -np.inf], [np.inf, np.inf, np.inf])
         param_names = ['C', 'a', 'h']
+
+    elif model == 'f_3':
+        fit_function = f_3
+        C0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
+        a0 = 3.17
+        h0 = float(x[np.argmax(np.abs(y))]) if len(x) > 0 else 0.0
+        p0 = [C0, a0, h0]
+        bounds = ([-np.inf, 1e-8, -np.inf], [np.inf, np.inf, np.inf])
+        param_names = ['C', 'a', 'h']
+
+    elif model == 'f_4':
+        fit_function = f_4
+        C0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
+        a0 = 3.17
+        h0 = float(x[np.argmax(np.abs(y))]) if len(x) > 0 else 0.0
+        b0 = 1.27
+        p0 = [C0, a0, h0, b0]
+        bounds = ([-np.inf, 1e-8, -np.inf, 1e-8], [np.inf, np.inf, np.inf, np.inf])
+        param_names = ['C', 'a', 'h', 'b']
+
+    elif model == 'f_5':
+        fit_function = f_5
+        C0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
+        a0 = 3.17
+        h0 = float(x[np.argmax(np.abs(y))]) if len(x) > 0 else 0.0
+        b0 = 1.27
+        p0 = [C0, a0, h0, b0]
+        bounds = ([-np.inf, 1e-8, -np.inf, 1e-8], [np.inf, np.inf, np.inf, np.inf])
+        param_names = ['C', 'a', 'h', 'b']
+
+    elif model == 'f_6':
+        fit_function = f_6
+        C0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
+        h0 = float(x[np.argmax(np.abs(y))]) if len(x) > 0 else 0.0
+        p0 = [C0, h0]
+        bounds = ([-np.inf, -np.inf], [np.inf, np.inf])
+        param_names = ['C', 'h']
 
     else:
         raise ValueError(f"Unknown model: {model}")
@@ -87,7 +199,7 @@ def FitSituation(x, data_dict, model='linear'):
         absolute_sigma=True,
         p0=p0,
         bounds=bounds,
-        maxfev=20000
+        maxfev=200000
     )
 
     perr = np.sqrt(np.diag(pcov))
@@ -110,9 +222,9 @@ def FitSituation(x, data_dict, model='linear'):
     }
 # ========================= PLOT HELPERS =========================
 def PlotSituationOnAxis(ax, x, data_dict, label, model=None, color=None):
-    x = np.array(x, dtype=float)
-    y = np.array(data_dict['mean'], dtype=float)
-    yerr = np.array(ConservativeError(data_dict), dtype=float)
+    x = np.asarray(x, dtype=np.float64)
+    y = np.asarray(data_dict['mean'], dtype=np.float64)
+    yerr = np.asarray(ConservativeError(data_dict), dtype=np.float64)
 
     fit_result = None
     if model is not None and len(x) >= 2:
@@ -153,7 +265,7 @@ def make_subplot_grid(n_panels, max_cols=3):
     )
     return fig, axes.ravel()
 
-def PlotCategoryOnAxis(ax, results_list, title, xlabel, model=None, ylim=None):
+def PlotCategoryOnAxis(ax, results_list, title, xlabel, model=None, ylim=None, ylabel=None):
     fit_results = []
     color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
     all_x = []
@@ -174,8 +286,6 @@ def PlotCategoryOnAxis(ax, results_list, title, xlabel, model=None, ylim=None):
         })
         all_x.extend(situation['x'])
 
-    ax.set_title(title, fontsize=13, pad=8)
-
     legend = ax.legend(
         loc='upper left',
         fontsize=9,
@@ -186,11 +296,13 @@ def PlotCategoryOnAxis(ax, results_list, title, xlabel, model=None, ylim=None):
     )
     legend.get_frame().set_alpha(0.9)
 
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
 
     return fit_results
 
 
-def PlotCategoryFamily(results, keys, family_title, xlabel, model=None, max_cols=3):
+def PlotCategoryFamily(results, keys, family_title, xlabel, ylabel=None, model=None, max_cols=3):
     if not keys:
         return {}
 
@@ -204,6 +316,7 @@ def PlotCategoryFamily(results, keys, family_title, xlabel, model=None, max_cols
             results_list=results[key],
             title=key,
             xlabel=xlabel,
+            ylabel=ylabel,
             model=model,
         )
 
@@ -304,7 +417,7 @@ def build_situation_from_datasets(situation, prominence=0.15, plot=False):
 
 # ========================= GROUP DEFINITION =========================
 GROUPS = {
-    'distance1': [
+    'ForcevsDistance1': [
         {
             'label': 'Magnet 1',
             'datasets': [
@@ -367,7 +480,7 @@ GROUPS = {
         },
     ],
 
-    'distance2': [
+    'ForcevsDistance2': [
         {
             'label': 'Magnet 1',
             'datasets': [
@@ -430,7 +543,7 @@ GROUPS = {
         },
     ],
 
-    'distance3': [
+    'ForcevsDistance3': [
         {
             'label': 'Magnet 2',
             'datasets': [
@@ -473,7 +586,7 @@ GROUPS = {
         },
     ],
 
-    'magnets1': [
+    'ForcevsMagnets1': [
         {
             'label': 'Distance 1',
             'datasets': [
@@ -516,7 +629,7 @@ GROUPS = {
         },
     ],
 
-    'magnets2': [
+    'ForcevsMagnets2': [
         {
             'label': 'Distance 1',
             'datasets': [
@@ -559,7 +672,7 @@ GROUPS = {
         },
     ],
 
-    'magnets3': [
+    'ForcevsMagnets3': [
         {
             'label': 'Distance 1',
             'datasets': [
@@ -592,7 +705,7 @@ GROUPS = {
         },
     ],
 
-    'balls1': [
+    'ForcevsBalls1': [
         {'label': 'Distance 1', 'datasets': [{'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [2, 7], 'x': [2, 4]}]},
         {'label': 'Distance 2', 'datasets': [{'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [3, 8], 'x': [2, 4]}]},
         {'label': 'Distance 3', 'datasets': [{'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [4, 9], 'x': [2, 4]}]},
@@ -600,7 +713,7 @@ GROUPS = {
         {'label': 'Distance 5', 'datasets': [{'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [6, 11], 'x': [2, 4]}]},
     ],
 
-    'balls2': [
+    'ForcevsBalls2': [
         {
             'label': 'Distance 1',
             'datasets': [
@@ -643,7 +756,7 @@ GROUPS = {
         },
     ],
 
-    'balls3': [
+    'ForcevsBalls3': [
         {'label': 'Distance 1', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [6, 11, 16], 'x': [2, 4, 6]}]},
         {'label': 'Distance 2', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [7, 12, 17], 'x': [2, 4, 6]}]},
         {'label': 'Distance 3', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [8, 13, 18], 'x': [2, 4, 6]}]},
@@ -651,7 +764,7 @@ GROUPS = {
         {'label': 'Distance 5', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [10, 15, 20], 'x': [2, 4, 6]}]},
     ],
 
-    'balls4': [
+    'ForcevsBalls4': [
         {'label': 'Distance 1', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [21, 26, 31], 'x': [2, 4, 6]}]},
         {'label': 'Distance 2', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [22, 27, 32], 'x': [2, 4, 6]}]},
         {'label': 'Distance 3', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [23, 28, 33], 'x': [2, 4, 6]}]},
@@ -659,7 +772,7 @@ GROUPS = {
         {'label': 'Distance 5', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [25, 30, 35], 'x': [2, 4, 6]}]},
     ],
 
-    'balls5': [
+    'ForcevsBalls5': [
         {'label': 'Distance 1', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [36, 41, 46], 'x': [2, 4, 6]}]},
         {'label': 'Distance 2', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [37, 42, 47], 'x': [2, 4, 6]}]},
         {'label': 'Distance 3', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [38, 43, 48], 'x': [2, 4, 6]}]},
@@ -797,48 +910,53 @@ def main():
 
     results = BuildResults(GROUPS, prominence=0.15, plot=False)
 
-    distance_keys = [key for key in results if key.startswith('distance')]
-    magnet_keys = [key for key in results if key.startswith('magnets')]
-    ball_keys = [key for key in results if key.startswith('balls')]
+    distance_keys = [key for key in results if key.startswith('ForcevsDistance')]
+    magnet_keys = [key for key in results if key.startswith('ForcevsMagnets')]
+    ball_keys = [key for key in results if key.startswith('ForcevsBalls')]
 
-    distance_fit_results = PlotCategoryFamily(
-        results=results,
-        keys=distance_keys,
-        family_title='Force vs Distance',
-        xlabel='Distance (mm)',
-        model='f_2',
-        max_cols=3
-    )
+    distance_fit_results = {}
+    for model_name in ['f_2', 'f_3', 'f_4', 'f_5', 'f_6']:
+        distance_fit_results[model_name] = PlotCategoryFamily(
+            results=results,
+            family_title=f'Force vs Distance ({model_name})',
+            keys=distance_keys,
+            xlabel='Distance (mm)',
+            ylabel='Force (N)',
+            model=model_name,
+            max_cols=3
+        )
 
     magnet_fit_results = PlotCategoryFamily(
         results=results,
-        keys=magnet_keys,
         family_title='Force vs Number of Magnets',
+        keys=magnet_keys,
         xlabel='Number of Magnets',
-        model='linear',
+        ylabel='Force (N)',
+        model='power',
         max_cols=2
     )
 
     ball_fit_results = PlotCategoryFamily(
         results=results,
-        keys=ball_keys,
         family_title='Force vs Number of Balls',
+        keys=ball_keys,
         xlabel='Number of Balls',
+        ylabel='Force (N)',
         model='linear',
         max_cols=3
     )
 
     PrintResults(results)
 
-    for key, fit_result in distance_fit_results.items():
-        PrintFitResults(f'Force vs Distance ({key})', fit_result)
+    for model_name, model_results in distance_fit_results.items():
+        for key, fit_result in model_results.items():
+            PrintFitResults(f'Force vs Distance ({model_name}) - {key}', fit_result)
 
     for key, fit_result in magnet_fit_results.items():
         PrintFitResults(f'Force vs Number of Magnets ({key})', fit_result)
 
     for key, fit_result in ball_fit_results.items():
         PrintFitResults(f'Force vs Number of Balls ({key})', fit_result)
-
     return results
 
 if __name__ == '__main__':
