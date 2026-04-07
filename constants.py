@@ -32,6 +32,10 @@ tape_thickness = 0.05 / 1000                # m
 d_tape_thickness = 0.01 / 1000              # m
 
 
+#===== FORCE OF FRICTION =====
+
+friction_force = 0.1                        # N
+
 
 
 

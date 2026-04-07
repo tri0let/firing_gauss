@@ -6,7 +6,6 @@ from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
 import numpy as np
 import pandas as pd
-from constants import *
 
 # ========================= UNCERTAINTY =========================
 def ConservativeError(data_dict):
@@ -16,145 +15,24 @@ def ConservativeError(data_dict):
 def linear_model(x, m, b):
     return m * x + b
 
-def power_model(x, a, b):
-    return a * x**b
-
 n = 1
 
 def f_1(x, a, h):
-    x = np.asarray(x, dtype=np.float64)
-    a = float(a)
-    h = float(h)
+    x = np.array(x, dtype=float)
     return a / (x - h)**n
 
 def f_2(z, C, a, h):
-    z = np.asarray(z, dtype=np.float64)
-    C = float(C)
-    a = float(a)
-    h = float(h)
+    z = np.array(z, dtype=float)
     return C * (
         ((z - h + 1.27) / np.sqrt((z - h + 1.27)**2 + a**2))
         - ((z - h - 1.27) / np.sqrt((z - h - 1.27)**2 + a**2))
     )
 
-def f_3(z, C, a, h):
-    z = np.asarray(z, dtype=np.float64)
-    C = float(C)
-    a = float(a)
-    h = float(h)
-    return C * (
-        ((-1.27 - h + z)**2 / (a**2 + (-1.27 - h + z)**2)**1.5)
-        - 1.0 / np.sqrt(a**2 + (-1.27 - h + z)**2)
-        + 1.0 / np.sqrt(a**2 + (1.27 - h + z)**2)
-        - ((1.27 - h + z)**2 / (a**2 + (1.27 - h + z)**2)**1.5)
-    )
-
-def f_4(z, C, a, h, b):
-    z = np.asarray(z, dtype=np.float64)
-    C = float(C)
-    a = float(a)
-    h = float(h)
-    b = float(b)
-    return C * (
-        ((-b - h + z)**2 / (a**2 + (-b - h + z)**2)**1.5)
-        - 1.0 / np.sqrt(a**2 + (-b - h + z)**2)
-        + 1.0 / np.sqrt(a**2 + (b - h + z)**2)
-        - ((b - h + z)**2 / (a**2 + (b - h + z)**2)**1.5)
-    )
-
-def f_5(z, C, a, h, b):
-    z = np.asarray(z, dtype=np.float64)
-    C = float(C)
-    a = float(a)
-    h = float(h)
-    b = float(b)
-
-    term1 = (
-        ((-b - h + z)**2 / (a**2 + (-b - h + z)**2)**1.5)
-        - 1.0 / np.sqrt(a**2 + (-b - h + z)**2)
-        + 1.0 / np.sqrt(a**2 + (b - h + z)**2)
-        - ((b - h + z)**2 / (a**2 + (b - h + z)**2)**1.5)
-    )
-
-    term2 = (
-        ((z - h + b) / np.sqrt((z - h + b)**2 + a**2))
-        - ((z - h - b) / np.sqrt((z - h - b)**2 + a**2))
-    )
-
-    return C * term1 * term2
-
-def f_6(z, C, h):
-    z = np.asarray(z, dtype=np.float64)
-    C = float(C)
-    h = float(h)
-    a = mag_radius
-    b = mag_thickness / 2
-
-    term1 = (
-        ((-b - h + z)**2 / (a**2 + (-b - h + z)**2)**1.5)
-        - 1.0 / np.sqrt(a**2 + (-b - h + z)**2)
-        + 1.0 / np.sqrt(a**2 + (b - h + z)**2)
-        - ((b - h + z)**2 / (a**2 + (b - h + z)**2)**1.5)
-    )
-
-    term2 = (
-        ((z - h + b) / np.sqrt((z - h + b)**2 + a**2))
-        - ((z - h - b) / np.sqrt((z - h - b)**2 + a**2))
-    )
-
-    return C * term1 * term2
-
-def model_fit(z, C, n):
-    z = np.asarray(z, dtype=np.float64) / 1000
-    C = float(C)
-    n = np.asarray(n, dtype=int)
-    a = mag_radius
-    D = mag_thickness
-    R = ball_radius
-
-    term1 = (
-        ((n * D + R + z)**2 / (a**2 + (n * D + R + z)**2)**1.5)
-        - 1.0 / np.sqrt(a**2 + (n * D + R + z)**2)
-        + 1.0 / np.sqrt(a**2 + (R + z)**2)
-        - ((R + z)**2 / (a**2 + (R + z)**2)**1.5)
-    )
-
-    term2 = (
-        ((z + R) / np.sqrt((z + R)**2 + a**2))
-        - ((z + n * D + R) / np.sqrt((z + n * D + R)**2 + a**2))
-    )
-
-    return C * term1 * term2
-
-def model_fit_offset(z, C, h, n):
-    z = np.asarray(z, dtype=np.float64) / 1000
-    C = float(C)
-    n = np.asarray(n, dtype=int)
-    a = mag_radius
-    D = mag_thickness
-    R = ball_radius
-
-    term1 = (
-        ((n * D + R  + h + z)**2 / (a**2 + (n * D + R + h + z)**2)**1.5)
-        - 1.0 / np.sqrt(a**2 + (n * D + R + h + z)**2)
-        + 1.0 / np.sqrt(a**2 + (R + h + z)**2)
-        - ((R + h + z)**2 / (a**2 + (R + h + z)**2)**1.5)
-    )
-
-    term2 = (
-        ((z + R + h) / np.sqrt((z + R + h)**2 + a**2))
-        - ((z + n * D + R + h) / np.sqrt((z + n * D + R + h)**2 + a**2))
-    )
-
-    return C * term1 * term2
-
-
 # ========================= FIT FUNCTION =========================
-# ========================= FIT FUNCTION =========================
-def FitSituation(x, data_dict, parameters, model='linear'):
-    x = np.asarray(x, dtype=np.float64)
-    y = np.asarray(data_dict['mean'], dtype=np.float64)
-    yerr = np.asarray(ConservativeError(data_dict), dtype=np.float64)
+def FitSituation(x, data_dict, model='linear'):
+    x = np.array(x, dtype=float)
+    y = np.array(data_dict['mean'], dtype=float)
+    yerr = np.array(ConservativeError(data_dict), dtype=float)
 
     if len(x) != len(y):
         raise ValueError(f'Length mismatch: len(x)={len(x)} but len(y)={len(y)}')
@@ -167,122 +45,36 @@ def FitSituation(x, data_dict, parameters, model='linear'):
         bounds = (-np.inf, np.inf)
         param_names = ['m', 'b']
 
-    elif model == 'power':
-        fit_function = power_model
-        p0 = [1.0, 1.0]   # a = scale, b = exponent
-        bounds = ([0, -np.inf], [np.inf, np.inf])  # a > 0
-        param_names = ['a', 'b']
-
-    
     elif model == 'f_1':
         fit_function = f_1
+
+        # Safer initial guesses
         a0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
+
+        # Put h outside the x-range to avoid division by zero at start
         x_min = np.min(x)
         x_max = np.max(x)
         span = x_max - x_min if x_max > x_min else 1.0
         h0 = x_min - 0.5 * span
+
         p0 = [a0, h0]
+
+        # Keep h away from the data interval so x-h does not hit zero
         bounds = (
             [-np.inf, -np.inf],
             [ np.inf, x_min - 1e-6]
         )
+
         param_names = ['a', 'h']
 
     elif model == 'f_2':
         fit_function = f_2
-        C0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
-        a0 = 3.17
-        h0 = float(x[np.argmax(np.abs(y))]) if len(x) > 0 else 0.0
+        C0 = float(np.max(y)) if len(y) > 0 else 1.0
+        a0 = 0.5
+        h0 = float(x[np.argmax(y)]) if len(x) > 0 else 0.0
         p0 = [C0, a0, h0]
         bounds = ([-np.inf, 1e-8, -np.inf], [np.inf, np.inf, np.inf])
         param_names = ['C', 'a', 'h']
-
-    elif model == 'f_3':
-        fit_function = f_3
-        C0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
-        a0 = 3.17
-        h0 = float(x[np.argmax(np.abs(y))]) if len(x) > 0 else 0.0
-        p0 = [C0, a0, h0]
-        bounds = ([-np.inf, 1e-8, -np.inf], [np.inf, np.inf, np.inf])
-        param_names = ['C', 'a', 'h']
-
-    elif model == 'f_4':
-        fit_function = f_4
-        C0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
-        a0 = 3.17
-        h0 = float(x[np.argmax(np.abs(y))]) if len(x) > 0 else 0.0
-        b0 = 1.27
-        p0 = [C0, a0, h0, b0]
-        bounds = ([-np.inf, 1e-8, -np.inf, 1e-8], [np.inf, np.inf, np.inf, np.inf])
-        param_names = ['C', 'a', 'h', 'b']
-
-    elif model == 'f_5':
-        fit_function = f_5
-        C0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
-        a0 = 3.17
-        h0 = float(x[np.argmax(np.abs(y))]) if len(x) > 0 else 0.0
-        b0 = 1.27
-        p0 = [C0, a0, h0, b0]
-        bounds = ([-np.inf, 1e-8, -np.inf, 1e-8], [np.inf, np.inf, np.inf, np.inf])
-        param_names = ['C', 'a', 'h', 'b']
-
-    elif model == 'f_6':
-        fit_function = f_6
-        C0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
-        h0 = float(x[np.argmax(np.abs(y))]) if len(x) > 0 else 0.0
-        p0 = [C0, h0]
-        bounds = ([-np.inf, -np.inf], [np.inf, np.inf])
-        param_names = ['C', 'h']
-
-    elif model == 'model_magnets':
-        if parameters['num_magnets'] != 'variable':
-            raise ValueError(f'Model {model} cannot be used when num_magnets is not variable!')
-        z = parameters['distance']
-        def model_magnets(n, C):
-            return model_fit(z, C, n)
-        fit_function = model_magnets
-        C0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
-        p0 = [C0]
-        bounds = (-np.inf, np.inf)
-        param_names = ['C']
-
-    elif model == 'model_distance':
-        if parameters['distance'] != 'variable':
-            raise ValueError(f'Model {model} cannot be used when distance is not variable!')
-        n = parameters['num_magnets']
-        def model_distance(z, C):
-            return model_fit(z, C, n)
-        fit_function = model_distance
-        C0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
-        p0 = [C0]
-        bounds = (-np.inf, np.inf)
-        param_names = ['C']
-
-    elif model == 'model_magnets_offset':
-        if parameters['num_magnets'] != 'variable':
-            raise ValueError(f'Model {model} cannot be used when num_magnets is not variable!')
-        z = parameters['distance']
-        def model_magnets_offset(n, C, h):
-            return model_fit_offset(z, C, h, n)
-        fit_function = model_magnets_offset
-        C0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
-        h0 = float(x[np.argmax(np.abs(y))]) if len(x) > 0 else 0.0
-        p0 = [C0, h0]
-        bounds = ([-np.inf, -np.inf], [np.inf, np.inf])
-        param_names = ['C', 'h']
-
-    elif model == 'model_distance_offset':
-        if parameters['distance'] != 'variable':
-            raise ValueError(f'Model {model} cannot be used when distance is not variable!')
-        n = parameters['num_magnets']
-        def model_distance_offset(z, C, h):
-            return model_fit_offset(z, C, h, n)
-        fit_function = model_distance_offset
-        C0 = float(np.max(np.abs(y))) if len(y) > 0 else 1.0
-        h0 = float(x[np.argmax(np.abs(y))]) if len(x) > 0 else 0.0
-        p0 = [C0, h0]
-        bounds = ([-np.inf, -np.inf], [np.inf, np.inf])
-        param_names = ['C', 'h']
 
     else:
         raise ValueError(f"Unknown model: {model}")
@@ -295,7 +87,7 @@ def FitSituation(x, data_dict, parameters, model='linear'):
         absolute_sigma=True,
         p0=p0,
         bounds=bounds,
-        maxfev=200000
+        maxfev=20000
     )
 
     perr = np.sqrt(np.diag(pcov))
@@ -317,14 +109,14 @@ def FitSituation(x, data_dict, parameters, model='linear'):
         'red_chi2': red_chi2
     }
 # ========================= PLOT HELPERS =========================
-def PlotSituationOnAxis(ax, x, data_dict, label, parameters, model=None, color=None):
-    x = np.asarray(x, dtype=np.float64)
-    y = np.asarray(data_dict['mean'], dtype=np.float64)
-    yerr = np.asarray(ConservativeError(data_dict), dtype=np.float64)
+def PlotSituationOnAxis(ax, x, data_dict, label, model=None, color=None):
+    x = np.array(x, dtype=float)
+    y = np.array(data_dict['mean'], dtype=float)
+    yerr = np.array(ConservativeError(data_dict), dtype=float)
 
     fit_result = None
     if model is not None and len(x) >= 2:
-        fit_result = FitSituation(x, data_dict, parameters, model=model)
+        fit_result = FitSituation(x, data_dict, model=model)
         xfine = np.linspace(np.min(x), np.max(x), 500)
         yfine = fit_result['function'](xfine, *fit_result['params'])
         ax.plot(
@@ -361,7 +153,7 @@ def make_subplot_grid(n_panels, max_cols=3):
     )
     return fig, axes.ravel()
 
-def PlotCategoryOnAxis(ax, results_list, title, xlabel, model=None, ylim=None, ylabel=None):
+def PlotCategoryOnAxis(ax, results_list, title, xlabel, model=None, ylim=None):
     fit_results = []
     color_cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
     all_x = []
@@ -373,7 +165,6 @@ def PlotCategoryOnAxis(ax, results_list, title, xlabel, model=None, ylim=None, y
             situation['x'],
             situation['data'],
             situation['label'],
-            situation['parameters'],
             model=model,
             color=color
         )
@@ -383,8 +174,10 @@ def PlotCategoryOnAxis(ax, results_list, title, xlabel, model=None, ylim=None, y
         })
         all_x.extend(situation['x'])
 
+    ax.set_title(title, fontsize=13, pad=8)
+
     legend = ax.legend(
-        loc='upper right',
+        loc='upper left',
         fontsize=9,
         frameon=True,
         title='Series',
@@ -393,13 +186,11 @@ def PlotCategoryOnAxis(ax, results_list, title, xlabel, model=None, ylim=None, y
     )
     legend.get_frame().set_alpha(0.9)
 
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
 
     return fit_results
 
 
-def PlotCategoryFamily(results, keys, family_title, xlabel, ylabel=None, model=None, max_cols=3):
+def PlotCategoryFamily(results, keys, family_title, xlabel, model=None, max_cols=3):
     if not keys:
         return {}
 
@@ -413,7 +204,6 @@ def PlotCategoryFamily(results, keys, family_title, xlabel, ylabel=None, model=N
             results_list=results[key],
             title=key,
             xlabel=xlabel,
-            ylabel=ylabel,
             model=model,
         )
 
@@ -449,7 +239,6 @@ def merge_data_dicts(data_dicts):
 
 def build_situation_from_datasets(situation, prominence=0.15, plot=False):
     label = situation['label']
-    parameters = situation['parameters']
 
     if 'datasets' in situation:
         x_all = []
@@ -483,7 +272,6 @@ def build_situation_from_datasets(situation, prominence=0.15, plot=False):
 
         return {
             'label': label,
-            'parameters': parameters,
             'x': x_all,
             'data': merged_data
         }
@@ -516,13 +304,8 @@ def build_situation_from_datasets(situation, prominence=0.15, plot=False):
 
 # ========================= GROUP DEFINITION =========================
 GROUPS = {
-    'ForcevsDistance1': [
+    'distance1': [
         {
-            'parameters': {
-                'distance': 'variable',
-                'num_balls': 2,
-                'num_magnets': 1,
-            },
             'label': 'Magnet 1',
             'datasets': [
                 {
@@ -538,11 +321,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'distance': 'variable',
-                'num_balls': 2,
-                'num_magnets': 2
-            },
             'label': 'Magnet 2',
             'datasets': [
                 {
@@ -558,11 +336,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'distance': 'variable',
-                'num_balls': 2,
-                'num_magnets': 4
-            },
             'label': 'Magnet 4',
             'datasets': [
                 {
@@ -573,11 +346,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'distance': 'variable',
-                'num_balls': 2,
-                'num_magnets': 8
-            },
             'label': 'Magnet 8',
             'datasets': [
                 {
@@ -588,11 +356,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'distance': 'variable',
-                'num_balls': 2,
-                'num_magnets': 16
-            },
             'label': 'Magnet 16',
             'datasets': [
                 {
@@ -604,13 +367,8 @@ GROUPS = {
         },
     ],
 
-    'ForcevsDistance2': [
+    'distance2': [
         {
-            'parameters': {
-                'distance': 'variable',
-                'num_balls': 4,
-                'num_magnets': 1
-            },
             'label': 'Magnet 1',
             'datasets': [
                 {
@@ -626,11 +384,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'distance': 'variable',
-                'num_balls': 4,
-                'num_magnets': 2
-            },
             'label': 'Magnet 2',
             'datasets': [
                 {
@@ -646,11 +399,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'distance': 'variable',
-                'num_balls': 4,
-                'num_magnets': 4
-            },
             'label': 'Magnet 4',
             'datasets': [
                 {
@@ -661,11 +409,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'distance': 'variable',
-                'num_balls': 4,
-                'num_magnets': 8
-            },
             'label': 'Magnet 8',
             'datasets': [
                 {
@@ -676,11 +419,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'distance': 'variable',
-                'num_balls': 4,
-                'num_magnets': 16
-            },
             'label': 'Magnet 16',
             'datasets': [
                 {
@@ -692,13 +430,8 @@ GROUPS = {
         },
     ],
 
-    'ForcevsDistance3': [
+    'distance3': [
         {
-            'parameters': {
-                'distance': 'variable',
-                'num_balls': 6,
-                'num_magnets': 2
-            },
             'label': 'Magnet 2',
             'datasets': [
                 {
@@ -709,11 +442,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'distance': 'variable',
-                'num_balls': 6,
-                'num_magnets': 4
-            },
             'label': 'Magnet 4',
             'datasets': [
                 {
@@ -724,11 +452,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'distance': 'variable',
-                'num_balls': 6,
-                'num_magnets': 8
-            },
             'label': 'Magnet 8',
             'datasets': [
                 {
@@ -739,11 +462,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'distance': 'variable',
-                'num_balls': 6,
-                'num_magnets': 16
-            },
             'label': 'Magnet 16',
             'datasets': [
                 {
@@ -755,13 +473,8 @@ GROUPS = {
         },
     ],
 
-    'ForcevsMagnets1': [
+    'magnets1': [
         {
-            'parameters': {
-                'num_magnets': 'variable',
-                'num_balls': 2,
-                'distance': 0.35   
-            },
             'label': 'Distance 1',
             'datasets': [
                 {'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [2], 'x': [1]},
@@ -770,11 +483,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'num_magnets': 'variable',
-                'num_balls': 2,
-                'distance': 0.67
-            },
             'label': 'Distance 2',
             'datasets': [
                 {'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [3], 'x': [1]},
@@ -783,11 +491,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'num_magnets': 'variable',
-                'num_balls': 2,
-                'distance': 1.29
-            },
             'label': 'Distance 3',
             'datasets': [
                 {'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [4], 'x': [1]},
@@ -796,11 +499,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-            'num_magnets': 'variable',
-            'num_balls': 2,
-            'distance': 1.93
-            },
             'label': 'Distance 4',
             'datasets': [
                 {'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [5], 'x': [1]},
@@ -809,11 +507,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'num_magnets': 'variable',
-                'num_balls': 2,
-                'distance': 2.57
-            },
             'label': 'Distance 5',
             'datasets': [
                 {'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [6], 'x': [1]},
@@ -823,14 +516,8 @@ GROUPS = {
         },
     ],
 
-    'ForcevsMagnets2': [
+    'magnets2': [
         {
-            'parameters': {
-                'num_magnets': 'variable',
-                'num_balls': 4,
-                'distance': 0.35
-            },
-            
             'label': 'Distance 1',
             'datasets': [
                 {'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [7], 'x': [1]},
@@ -839,11 +526,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'num_magnets': 'variable',
-                'num_balls': 4,
-                'distance': 0.67
-            },
             'label': 'Distance 2',
             'datasets': [
                 {'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [8], 'x': [1]},
@@ -852,12 +534,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'num_magnets': 'variable',
-                'num_balls': 4,
-                'distance': 1.29
-            },
-            
             'label': 'Distance 3',
             'datasets': [
                 {'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [9], 'x': [1]},
@@ -866,12 +542,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'num_magnets': 'variable',
-                'num_balls': 4,
-                'distance': 1.93
-            },
-            
             'label': 'Distance 4',
             'datasets': [
                 {'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [10], 'x': [1]},
@@ -880,12 +550,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'num_magnets': 'variable',
-                'num_balls': 4,
-                'distance': 2.57
-            },
-            
             'label': 'Distance 5',
             'datasets': [
                 {'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [11], 'x': [1]},
@@ -895,62 +559,32 @@ GROUPS = {
         },
     ],
 
-    'ForcevsMagnets3': [
+    'magnets3': [
         {
-            'parameters': {
-                'num_magnets': 'variable',
-                'num_balls': 6,
-                'distance': 0.35
-            },
-            
             'label': 'Distance 1',
             'datasets': [
                 {'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [1, 16, 31, 46], 'x': [2, 4, 8, 16]}
             ]
         },
         {
-            'parameters': {
-                'num_magnets': 'variable',
-                'num_balls': 6,
-                'distance': 0.67
-            },
-            
             'label': 'Distance 2',
             'datasets': [
                 {'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [2, 17, 32, 47], 'x': [2, 4, 8, 16]}
             ]
         },
         {
-            'parameters': {
-                'num_magnets': 'variable',
-                'num_balls': 6,
-                'distance': 1.29
-            },
-            
             'label': 'Distance 3',
             'datasets': [
                 {'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [3, 18, 33, 48], 'x': [2, 4, 8, 16]}
             ]
         },
         {
-            'parameters': {
-                'num_magnets': 'variable',
-                'num_balls': 6,
-                'distance': 1.93
-            },
-            
             'label': 'Distance 4',
             'datasets': [
                 {'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [4, 19, 34, 49], 'x': [2, 4, 8, 16]}
             ]
         },
         {
-            'parameters': {
-                'num_magnets': 'variable',
-                'num_balls': 6,
-                'distance': 2.57
-            },
-             
             'label': 'Distance 5',
             'datasets': [
                 {'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [5, 20, 35, 50], 'x': [2, 4, 8, 16]}
@@ -958,57 +592,16 @@ GROUPS = {
         },
     ],
 
-    'ForcevsBalls1': [
-        {
-            'parameters': {
-                'num_magnets': 1,
-                'num_balls': 'variable',
-                'distance': 0.35
-            },
-            
-            'label': 'Distance 1', 'datasets': [{'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [2, 7], 'x': [2, 4]}]},
-        {
-            'parameters': {
-                'num_magnets': 1,
-                'num_balls': 'variable',
-                'distance': 0.67
-            },
-            
-            'label': 'Distance 2', 'datasets': [{'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [3, 8], 'x': [2, 4]}]},
-        {
-            'parameters': {
-                'num_magnets': 1,
-                'num_balls': 'variable',
-                'distance': 1.29
-            },
-                
-            'label': 'Distance 3', 'datasets': [{'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [4, 9], 'x': [2, 4]}]},
-        {
-            'parameters': {
-                'num_magnets': 1,
-                'num_balls': 'variable',
-                'distance': 1.93
-            },
-            
-            'label': 'Distance 4', 'datasets': [{'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [5, 10], 'x': [2, 4]}]},
-        {
-            'parameters': {
-                'num_magnets': 1,
-                'num_balls': 'variable',
-                'distance': 2.57
-            },
-            
-            'label': 'Distance 5', 'datasets': [{'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [6, 11], 'x': [2, 4]}]},
+    'balls1': [
+        {'label': 'Distance 1', 'datasets': [{'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [2, 7], 'x': [2, 4]}]},
+        {'label': 'Distance 2', 'datasets': [{'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [3, 8], 'x': [2, 4]}]},
+        {'label': 'Distance 3', 'datasets': [{'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [4, 9], 'x': [2, 4]}]},
+        {'label': 'Distance 4', 'datasets': [{'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [5, 10], 'x': [2, 4]}]},
+        {'label': 'Distance 5', 'datasets': [{'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [6, 11], 'x': [2, 4]}]},
     ],
 
-    'ForcevsBalls2': [
+    'balls2': [
         {
-            'parameters': {
-                'num_magnets': 2,
-                'num_balls': 'variable',
-                'distance': 0.35
-            },
-            
             'label': 'Distance 1',
             'datasets': [
                 {'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [7], 'x': [2]},
@@ -1017,12 +610,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'num_magnets': 2,
-                'num_balls': 'variable',
-                'distance': 0.67
-            },
-            
             'label': 'Distance 2',
             'datasets': [
                 {'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [8], 'x': [2]},
@@ -1031,12 +618,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'num_magnets': 2,
-                'num_balls': 'variable',
-                'distance': 1.29
-            },
-            
             'label': 'Distance 3',
             'datasets': [
                 {'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [9], 'x': [2]},
@@ -1045,12 +626,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'num_magnets': 2,
-                'num_balls': 'variable',
-                'distance': 1.93
-            },
-            
             'label': 'Distance 4',
             'datasets': [
                 {'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [10], 'x': [2]},
@@ -1059,12 +634,6 @@ GROUPS = {
             ]
         },
         {
-            'parameters': {
-                'num_magnets': 2,
-                'num_balls': 'variable',
-                'distance': 2.57
-            },
-            
             'label': 'Distance 5',
             'datasets': [
                 {'file': 'csv_data/03-24-2026_magnetic_pull_data[force_timex11].csv', 'runs': [11], 'x': [2]},
@@ -1074,133 +643,28 @@ GROUPS = {
         },
     ],
 
-    'ForcevsBalls3': [
-        {
-            'parameters': {
-                'num_magnets': 4,
-                'num_balls': 'variable',
-                'distance': 0.35
-            },
-            
-            'label': 'Distance 1', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [6, 11, 16], 'x': [2, 4, 6]}]},
-        {
-            'parameters': {
-                'num_magnets': 4,
-                'num_balls': 'variable',
-                'distance': 0.67
-            },
-            
-            'label': 'Distance 2', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [7, 12, 17], 'x': [2, 4, 6]}]},
-        {
-            'parameters': {
-                'num_magnets': 4,
-                'num_balls': 'variable',
-                'distance': 1.29
-            },
-            
-            'label': 'Distance 3', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [8, 13, 18], 'x': [2, 4, 6]}]},
-        {
-            'parameters': {
-                'num_magnets': 4,
-                'num_balls': 'variable',
-                'distance': 1.93
-            },
-            
-            'label': 'Distance 4', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [9, 14, 19], 'x': [2, 4, 6]}]},
-        {
-            'parameters': {
-                'num_magnets': 4,
-                'num_balls': 'variable',
-                'distance': 2.57
-            },
-            
-            'label': 'Distance 5', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [10, 15, 20], 'x': [2, 4, 6]}]},
+    'balls3': [
+        {'label': 'Distance 1', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [6, 11, 16], 'x': [2, 4, 6]}]},
+        {'label': 'Distance 2', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [7, 12, 17], 'x': [2, 4, 6]}]},
+        {'label': 'Distance 3', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [8, 13, 18], 'x': [2, 4, 6]}]},
+        {'label': 'Distance 4', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [9, 14, 19], 'x': [2, 4, 6]}]},
+        {'label': 'Distance 5', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [10, 15, 20], 'x': [2, 4, 6]}]},
     ],
 
-    'ForcevsBalls4': [
-        {
-            'parameters': {
-                'num_magnets': 8,
-                'num_balls': 'variable',
-                'distance': 0.35
-            },
-            
-            'label': 'Distance 1', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [21, 26, 31], 'x': [2, 4, 6]}]},
-        {
-            'parameters': {
-                'num_magnets': 8,
-                'num_balls': 'variable',
-                'distance': 0.67
-            },
-            
-            'label': 'Distance 2', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [22, 27, 32], 'x': [2, 4, 6]}]},
-        {
-            'parameters': {
-            'num_magnets': 8,
-            'num_balls': 'variable',
-            'distance': 1.29
-            },
-            
-            'label': 'Distance 3', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [23, 28, 33], 'x': [2, 4, 6]}]},
-        {
-            'parameters': {
-                'num_magnets': 8,
-                'num_balls': 'variable',
-                'distance': 1.93
-            },
-
-            'label': 'Distance 4', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [24, 29, 34], 'x': [2, 4, 6]}]},
-        {
-            'parameters': {
-                'num_magnets': 8,
-                'num_balls': 'variable',
-                'distance': 2.57
-            },
-            
-            'label': 'Distance 5', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [25, 30, 35], 'x': [2, 4, 6]}]},
+    'balls4': [
+        {'label': 'Distance 1', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [21, 26, 31], 'x': [2, 4, 6]}]},
+        {'label': 'Distance 2', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [22, 27, 32], 'x': [2, 4, 6]}]},
+        {'label': 'Distance 3', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [23, 28, 33], 'x': [2, 4, 6]}]},
+        {'label': 'Distance 4', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [24, 29, 34], 'x': [2, 4, 6]}]},
+        {'label': 'Distance 5', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [25, 30, 35], 'x': [2, 4, 6]}]},
     ],
 
-    'ForcevsBalls5': [
-        {
-            'parameters': {
-                'num_magnets': 16,
-                'num_balls': 'variable',
-                'distance': 0.35
-            },
-            
-            'label': 'Distance 1', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [36, 41, 46], 'x': [2, 4, 6]}]},
-        {
-            'parameters': {
-                'num_magnets': 16,
-                'num_balls': 'variable',
-                'distance': 0.67
-            },
-            
-            'label': 'Distance 2', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [37, 42, 47], 'x': [2, 4, 6]}]},
-        {
-            'parameters': {
-                'num_magnets': 16,
-                'num_balls': 'variable',
-                'distance': 1.29
-            },
-            
-            'label': 'Distance 3', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [38, 43, 48], 'x': [2, 4, 6]}]},
-        {
-            'parameters': {
-                'num_magnets': 16,
-                'num_balls': 'variable',
-                'distance': 1.93
-            },
-            
-            'label': 'Distance 4', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [39, 44, 49], 'x': [2, 4, 6]}]},
-        {
-            'parameters': {
-                'num_magnets': 16,
-                'num_balls': 'variable',
-                'distance': 2.57
-            },
-           
-            'label': 'Distance 5', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [40, 45, 50], 'x': [2, 4, 6]}]},
+    'balls5': [
+        {'label': 'Distance 1', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [36, 41, 46], 'x': [2, 4, 6]}]},
+        {'label': 'Distance 2', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [37, 42, 47], 'x': [2, 4, 6]}]},
+        {'label': 'Distance 3', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [38, 43, 48], 'x': [2, 4, 6]}]},
+        {'label': 'Distance 4', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [39, 44, 49], 'x': [2, 4, 6]}]},
+        {'label': 'Distance 5', 'datasets': [{'file': 'csv_data/3-25-2026__magnetic_pull_data[force_timex65].csv', 'runs': [40, 45, 50], 'x': [2, 4, 6]}]},
     ],
 }
 
@@ -1333,55 +797,48 @@ def main():
 
     results = BuildResults(GROUPS, prominence=0.15, plot=False)
 
-    distance_keys = [key for key in results if key.startswith('ForcevsDistance')]
-    magnet_keys = [key for key in results if key.startswith('ForcevsMagnets')]
-    ball_keys = [key for key in results if key.startswith('ForcevsBalls')]
+    distance_keys = [key for key in results if key.startswith('distance')]
+    magnet_keys = [key for key in results if key.startswith('magnets')]
+    ball_keys = [key for key in results if key.startswith('balls')]
 
-    distance_fit_results = {}
-    for model_name in ['f_2', 'f_3', 'f_4', 'f_5', 'f_6', 'model_distance', 'model_distance_offset']:
-        distance_fit_results[model_name] = PlotCategoryFamily(
-            results=results,
-            family_title=f'Force vs Distance ({model_name})',
-            keys=distance_keys,
-            xlabel='Distance (mm)',
-            ylabel='Force (N)',
-            model=model_name,
-            max_cols=3
-        )
-    magnet_fit_results = {}
-    for model_name in ['model_magnets', 'model_magnets_offset']:
-        magnet_fit_results[model_name] = PlotCategoryFamily(
-            results=results,
-            family_title=f'Force vs Number of Magnets ({model_name})',
-            keys=magnet_keys,
-            xlabel='Number of Magnets',
-            ylabel='Force (N)',
-            model=model_name,
-            max_cols=2
-        )
+    distance_fit_results = PlotCategoryFamily(
+        results=results,
+        keys=distance_keys,
+        family_title='Force vs Distance',
+        xlabel='Distance (mm)',
+        model='f_2',
+        max_cols=3
+    )
+
+    magnet_fit_results = PlotCategoryFamily(
+        results=results,
+        keys=magnet_keys,
+        family_title='Force vs Number of Magnets',
+        xlabel='Number of Magnets',
+        model='linear',
+        max_cols=2
+    )
 
     ball_fit_results = PlotCategoryFamily(
         results=results,
-        family_title='Force vs Number of Balls',
         keys=ball_keys,
+        family_title='Force vs Number of Balls',
         xlabel='Number of Balls',
-        ylabel='Force (N)',
         model='linear',
         max_cols=3
     )
 
     PrintResults(results)
 
-    for model_name, model_results in distance_fit_results.items():
-        for key, fit_result in model_results.items():
-            PrintFitResults(f'Force vs Distance ({model_name}) - {key}', fit_result)
+    for key, fit_result in distance_fit_results.items():
+        PrintFitResults(f'Force vs Distance ({key})', fit_result)
 
-    for model_name, model_results in magnet_fit_results.items():
-        for key, fit_result in model_results.items():
-            PrintFitResults(f'Force vs Number of Magnets ({model_name}) - {key}', fit_result)
+    for key, fit_result in magnet_fit_results.items():
+        PrintFitResults(f'Force vs Number of Magnets ({key})', fit_result)
 
     for key, fit_result in ball_fit_results.items():
         PrintFitResults(f'Force vs Number of Balls ({key})', fit_result)
+
     return results
 
 if __name__ == '__main__':

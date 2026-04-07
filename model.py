@@ -14,15 +14,15 @@ h = -3.455433891132098 / 1000       # Distance accounting for offsets in the mea
 
 # ===== MAGNETIC FIELD OF MAGNET (CURRENTLY ONLY WORKS FOR TWO MAGNETS) =====
 
-def B(x, C, h):
-    return ((x - h + mag_thickness / 2) / np.sqrt((x - h + mag_thickness / 2)**2 + mag_radius**2))-((x - h - mag_thickness / 2) / np.sqrt((x - h - mag_thickness / 2)**2 + mag_radius**2))
+def B(x, C, n):
+    return ((x + n * mag_thickness + ball_radius) / np.sqrt((x + n * mag_thickness + ball_radius)**2 + mag_radius**2))-((x + ball_radius) / np.sqrt((x + ball_radius)**2 + mag_radius**2))
 
 B = np.vectorize(B)
 
 # ===== INDUCED MAGNETIC MOMENT OF STEEL BALL =====
 
-def m(x, C, h):
-    return (C / 2) * B(x, C, h)
+def m(x, C, n):
+    return (C / 2) * B(x, C, n)
 
 m = np.vectorize(m)
 
