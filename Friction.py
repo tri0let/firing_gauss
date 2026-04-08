@@ -7,6 +7,7 @@ from pathlib import Path
 # FILE PATH
 csv_file_path = Path("csv_data/3-31-2026_No_Magnets_Station[Speed_Time_Between_Gatesx7].csv")
 
+mass = 1.048 / 1000
 
 """ RUN INFORMATION
 start_position_cm = location of first measured photogate section
@@ -58,8 +59,10 @@ for run_number, run_values in run_information.items():
     delta_speed_m_per_s = speed_34 - speed_12
     mean_speed_m_per_s = (speed_12 + speed_34) / 2.0
 
+# Equation: v2^2 = v1^2 + 2*a*d
     acceleration_m_per_s2 = (speed_34**2 - speed_12**2) / (2.0 * section_distance_m)
     friction_m_per_s2 = -acceleration_m_per_s2
+    friction_force_N = mass * friction_m_per_s2
 
     for trial_index in range(trial_count):
         trial_rows.append({
@@ -75,6 +78,7 @@ for run_number, run_values in run_information.items():
             "delta_speed_m_per_s": delta_speed_m_per_s[trial_index],
             "mean_speed_m_per_s": mean_speed_m_per_s[trial_index],
             "friction_m_per_s2": friction_m_per_s2[trial_index],
+            "friction_force_N": friction_force_N[trial_index],
         })
 
 trial_data = pd.DataFrame(trial_rows)
@@ -106,12 +110,18 @@ run_summary = (
 
         mean_friction_m_per_s2=("friction_m_per_s2", "mean"),
         std_friction_m_per_s2=("friction_m_per_s2", "std"),
+        mean_friction_force_N=("friction_force_N", "mean"),
+        std_friction_force_N=("friction_force_N", "std"),
     )
     .reset_index()
 )
 
 run_summary["sem_friction_m_per_s2"] = (
     run_summary["std_friction_m_per_s2"] / np.sqrt(run_summary["trials"])
+)
+
+run_summary["sem_friction_force_N"] = (
+    run_summary["std_friction_force_N"] / np.sqrt(run_summary["trials"])
 )
 
 run_summary = run_summary.sort_values(by="run").reset_index(drop=True)
@@ -134,6 +144,9 @@ overall_summary = pd.DataFrame([{
     "mean_friction_m_per_s2": trial_data["friction_m_per_s2"].mean(),
     "std_friction_m_per_s2": trial_data["friction_m_per_s2"].std(),
     "sem_friction_m_per_s2": trial_data["friction_m_per_s2"].std() / np.sqrt(len(trial_data)),
+    "mean_friction_force_N": trial_data["friction_force_N"].mean(),
+    "std_friction_force_N": trial_data["friction_force_N"].std(),
+    "sem_friction_force_N": trial_data["friction_force_N"].std() / np.sqrt(len(trial_data)),
 }]).round(5)
 
 print("\nOVERALL SUMMARY")
