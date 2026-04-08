@@ -162,18 +162,10 @@ for dist in sorted(d_station["distance"].dropna().unique()):
 x_smooth_all, y_smooth_all = smooth_spline(d_station["magnets"], d_station["mean_speed_out"], lam=3)
 plt.plot(x_smooth_all, y_smooth_all, linewidth=3, alpha=0.7, label="Spline - Fit")
 
-# mark station maximum
-idx = d_station["mean_speed_out"].idxmax()
-row = d_station.loc[idx]
-plt.annotate(
-    f"max = {row['mean_speed_out']:.3f}",
-    (row["magnets"], row["mean_speed_out"]),
-    xytext=(6, 6),
-    textcoords="offset points",
-    fontsize=9
-)
 plt.xlabel("Number of Magnets", fontsize=16)
 plt.ylabel("Exit Velocity (m/s)", fontsize=16)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 plt.title(f" {int(s)} Station{'s' if s > 1 else ''}", fontsize=16)
 plt.legend(fontsize=12)
 plt.grid(alpha=0.3)
@@ -208,19 +200,10 @@ for i, s in enumerate(stations_to_plot):
         )
         x_smooth, y_smooth = smooth_spline(d_line["distance"], d_line["mean_speed_out"], lam=1)
         ax.plot(x_smooth, y_smooth, linewidth=1.8, alpha=0.8, label=f"Spline - {int(mag)} magnets")
-    # mark station maximum
-    idx = d_station["mean_speed_out"].idxmax()
-    row = d_station.loc[idx]
-    ax.annotate(
-        f"max = {row['mean_speed_out']:.3f}",
-        (row["distance"], row["mean_speed_out"]),
-        xytext=(6, 6),
-        textcoords="offset points",
-        fontsize=9
-    )
     ax.set_xlabel("Distance (cm)", fontsize=16)
     ax.set_ylabel("Exit Velocity (m/s)", fontsize=16)
-    ax.set_title(f"{int(s)} Station{'s' if s > 1 else ''}", fontsize=16)
+    ax.tick_params(axis='both', labelsize=14)
+    ax.set_title(f"({chr(97 + i)}) {int(s)} Station{'s' if s > 1 else ''}", fontsize=16)
     ax.legend(loc="upper left", fontsize=12)
     ax.grid(alpha=0.3)
 plt.tight_layout()
