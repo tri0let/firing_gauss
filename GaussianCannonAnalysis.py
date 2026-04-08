@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import numpy as np
+from scipy.interpolate import UnivariateSpline
 import matplotlib.pyplot as plt
 
 # ========= LOAD ==========
@@ -9,7 +10,7 @@ g1 = pd.read_csv(os.path.join(folder, "gaussian_cannon_4-01-2026_summary.csv"))
 g_all = pd.read_csv(os.path.join(folder, "gaussian_cannon_summary.csv"))
 nm = pd.read_csv(os.path.join(folder, "no_magnets_summary.csv"))
 
-# File structrureL 
+# File structure
 for df in [g1, g_all, nm]:
     df["mean_speed"] = pd.to_numeric(df["mean_speed"], errors="coerce")
     df["sem_speed"] = pd.to_numeric(df["sem_speed"], errors="coerce")
@@ -65,7 +66,7 @@ full["gain_vs_nomagnet"] = full["mean_speed_out"] - baseline_v
 
 full = full.sort_values(by=["stations", "distance", "magnets"]).reset_index(drop=True)
 
-# MAXIMUM EXIT VELOCITY FOR EACH STATION COUNT
+# MAXIMUM EXIT VELOCITY FOR EACH STATION 
 max_per_station = (
     full.loc[full.groupby("stations")["mean_speed_out"].idxmax()]
     .sort_values(by="stations")
@@ -108,165 +109,104 @@ print(full[[
     "gain_vs_nomagnet"
 ]].to_string(index=False))
 
+# Smooth spline function for plotting
+def smooth_spline(x, y, lam=None):
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    if len(x) < 2:
+        return x, y
+    sort_idx = np.argsort(x)
+    x = x[sort_idx]
+    y = y[sort_idx]
+    if len(x) != len(np.unique(x)):
+        grouped = {}
+        for xi, yi in zip(x, y):
+            grouped.setdefault(xi, []).append(yi)
+        x = np.array(sorted(grouped.keys()), dtype=float)
+        y = np.array([np.mean(grouped[xi]) for xi in x], dtype=float)
+    n = len(x)
+    if n < 2:
+        return x, y
+    k = min(3, n - 1)
+    spline = UnivariateSpline(x, y, k=k, s=2 if lam is None else lam)
+    x_smooth = np.linspace(x.min(), x.max(), 200)
+    y_smooth = spline(x_smooth)
+    return x_smooth, y_smooth
 
-# PLOT 1: EXIT VELOCITY VS MAGNETS (FIXED STATIONS & DISTANCE)
-for s in sorted(full["stations"].dropna().unique()):
-    d_station = full[full["stations"] == s].copy()
+# PLOT 1: EXIT VELOCITY VS MAGNETS (FIXED STATIONS & DISTANCE) 
+s = 1.0
+d_station = full[full["stations"] == s].copy()
 
-    plt.figure(figsize=(8, 5))
-
-    for dist in sorted(d_station["distance"].dropna().unique()):
-        d_line = d_station[d_station["distance"] == dist].copy()
-        d_line = d_line.sort_values(by="magnets")
-
-        if len(d_line) == 0:
-            continue
-
-        plt.errorbar(
-            d_line["magnets"],
-            d_line["mean_speed_out"],
-            yerr=d_line["sem_speed_out"],
-            fmt="o-",
-            capsize=4,
-            linewidth=1.5,
-            markersize=6,
-            label=f"distance = {dist}"
-        )
-
-    # mark station maximum
-    idx = d_station["mean_speed_out"].idxmax()
-    row = d_station.loc[idx]
-    plt.annotate(
-        f"max = {row['mean_speed_out']:.3f}",
-        (row["magnets"], row["mean_speed_out"]),
-        xytext=(6, 6),
-        textcoords="offset points",
-        fontsize=9
-    )
-
-    plt.xlabel("Number of Magnets")
-    plt.ylabel("Exit Velocity (m/s)")
-    plt.title(f"Exit Velocity vs Magnets ({int(s)} Station{'s' if s > 1 else ''})")
-    plt.legend()
-    plt.grid(alpha=0.3)
-    plt.tight_layout()
-    plt.show()
-
-# PLOT 2: EXIT VELOCITY VS DISTANCE
-for s in sorted(full["stations"].dropna().unique()):
-    d_station = full[full["stations"] == s].copy()
-
-    plt.figure(figsize=(8, 5))
-
-    for mag in sorted(d_station["magnets"].dropna().unique()):
-        d_line = d_station[d_station["magnets"] == mag].copy()
-        d_line = d_line.sort_values(by="distance")
-
-        if len(d_line) == 0:
-            continue
-
-        plt.errorbar(
-            d_line["distance"],
-            d_line["mean_speed_out"],
-            yerr=d_line["sem_speed_out"],
-            fmt="o-",
-            capsize=4,
-            linewidth=1.5,
-            markersize=6,
-            label=f"magnets = {int(mag)}"
-        )
-    # mark station maximum
-    idx = d_station["mean_speed_out"].idxmax()
-    row = d_station.loc[idx]
-    plt.annotate(
-        f"max = {row['mean_speed_out']:.3f}",
-        (row["distance"], row["mean_speed_out"]),
-        xytext=(6, 6),
-        textcoords="offset points",
-        fontsize=9
-    )
-    plt.xlabel("Distance")
-    plt.ylabel("Exit Velocity (m/s)")
-    plt.title(f"Exit Velocity vs Distance ({int(s)} Station{'s' if s > 1 else ''})")
-    plt.legend()
-    plt.grid(alpha=0.3)
-    plt.tight_layout()
-    plt.show()
-
-
-# PLOT 3: VELOCITY GAIN VS MAGNETS (FIXED STATIONS AND DISTANCE)
-for s in sorted(full["stations"].dropna().unique()):
-    d_station = full[full["stations"] == s].copy()
-
-    plt.figure(figsize=(8, 5))
-
-    for dist in sorted(d_station["distance"].dropna().unique()):
-        d_line = d_station[d_station["distance"] == dist].copy()
-        d_line = d_line.sort_values(by="magnets")
-
-        if len(d_line) == 0:
-            continue
-
-        plt.errorbar(
-            d_line["magnets"],
-            d_line["dv"],
-            yerr=d_line["dv_sem"],
-            fmt="o-",
-            capsize=4,
-            linewidth=1.5,
-            markersize=6,
-            label=f"distance = {dist}"
-        )
-
-    plt.xlabel("Number of Magnets")
-    plt.ylabel("Velocity Gain Δv (m/s)")
-    plt.title(f"Velocity Gain vs Magnets ({int(s)} Station{'s' if s > 1 else ''})")
-    plt.legend()
-    plt.grid(alpha=0.3)
-    plt.tight_layout()
-    plt.show()
-
-# PLOT 4: RATIO VS DISTANCE (STATIONS FIXED )
-for s in sorted(full["stations"].dropna().unique()):
-    d_station = full[full["stations"] == s].copy()
-    plt.figure(figsize=(8, 5))
-    for mag in sorted(d_station["magnets"].dropna().unique()):
-        d_line = d_station[d_station["magnets"] == mag].copy()
-        d_line = d_line.sort_values(by="distance")
-
-        if len(d_line) == 0:
-            continue
-        plt.errorbar(
-            d_line["distance"],
-            d_line["ratio"],
-            yerr=d_line["ratio_sem"],
-            fmt="o-",
-            capsize=4,
-            linewidth=1.5,
-            markersize=6,
-            label=f"magnets = {int(mag)}"
-        )
-    plt.xlabel("Distance")
-    plt.ylabel("Velocity Ratio (v_out / v_in)")
-    plt.title(f"Velocity Ratio vs Distance ({int(s)} Station{'s' if s > 1 else ''})")
-    plt.legend()
-    plt.grid(alpha=0.3)
-    plt.tight_layout()
-    plt.show()
-
-# PLOT 5: VELOCITY GAIN VS NO MAGNETS
 plt.figure(figsize=(8, 5))
-for s in sorted(full["stations"].dropna().unique()):
-    d_station = full[full["stations"] == s].copy()
-    plt.scatter(
-        d_station["magnets"],
-        d_station["gain_vs_nomagnet"],
-        label=f"{int(s)} station{'s' if s > 1 else ''}"
-    )
+for dist in sorted(d_station["distance"].dropna().unique()):
+    d_line = d_station[d_station["distance"] == dist].copy()
+    d_line = d_line.sort_values(by="magnets")
 
-plt.xlabel("Number of Magnets")
-plt.ylabel("Velocity Gain vs No-Magnet Baseline (m/s)")
-plt.title("In comparison to the No-Magnet Baseline")
+    if len(d_line) == 0:
+        continue
+
+    plt.errorbar(
+        d_line["magnets"],
+        d_line["mean_speed_out"],
+        yerr=d_line["sem_speed_out"],
+        fmt="o",
+        capsize=4,
+        linewidth=1.5,
+        markersize=6,
+        label=f"distance = {dist} (cm)"
+    )
+    x_smooth, y_smooth = smooth_spline(d_line["magnets"], d_line["mean_speed_out"], lam=3)
+    plt.plot(x_smooth, y_smooth, linewidth=1.8, alpha=0.8)
+
+
+x_smooth_all, y_smooth_all = smooth_spline(d_station["magnets"], d_station["mean_speed_out"], lam=3)
+plt.plot(x_smooth_all, y_smooth_all, linewidth=3, alpha=0.7, label="Spline - Fit")
+
+plt.xlabel("Number of Magnets", fontsize=16)
+plt.ylabel("Exit Velocity (m/s)", fontsize=16)
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+plt.title(f" {int(s)} Station{'s' if s > 1 else ''}", fontsize=16)
+plt.legend(fontsize=12)
 plt.grid(alpha=0.3)
 plt.tight_layout()
 plt.show()
+plt.close()
+
+# PLOT 2: EXIT VELOCITY VS DISTANCE 
+fig, axes = plt.subplots(1, 2, figsize=(14, 8))
+stations_to_plot = [2.0, 3.0]
+
+for i, s in enumerate(stations_to_plot):
+    ax = axes[i]
+    d_station = full[full["stations"] == s].copy()
+
+    for mag in sorted(d_station["magnets"].dropna().unique()):
+        d_line = d_station[d_station["magnets"] == mag].copy()
+        d_line = d_line.sort_values(by="distance")
+
+        if len(d_line) == 0:
+            continue
+
+        ax.errorbar(
+            d_line["distance"],
+            d_line["mean_speed_out"],
+            yerr=d_line["sem_speed_out"],
+            fmt="o",
+            capsize=4,
+            linewidth=1.5,
+            markersize=6,
+            label=f"magnets = {int(mag)}"
+        )
+        x_smooth, y_smooth = smooth_spline(d_line["distance"], d_line["mean_speed_out"], lam=1)
+        ax.plot(x_smooth, y_smooth, linewidth=1.8, alpha=0.8, label=f"Spline - {int(mag)} magnets")
+    ax.set_xlabel("Distance (cm)", fontsize=16)
+    ax.set_ylabel("Exit Velocity (m/s)", fontsize=16)
+    ax.tick_params(axis='both', labelsize=14)
+    ax.set_title(f"({chr(97 + i)}) {int(s)} Station{'s' if s > 1 else ''}", fontsize=16)
+    ax.legend(loc="upper left", fontsize=12)
+    ax.grid(alpha=0.3)
+plt.tight_layout()
+plt.show()
+plt.close()
+
