@@ -176,6 +176,10 @@ gaussian_file = gaussian_file.drop_duplicates(subset=["run", "gate"], keep="firs
 
 gaussian_file = gaussian_file.sort_values(by=["run", "gate"]).reset_index(drop=True)
 
+# ========== Remove Run 162-171 ==========
+gaussian_file = gaussian_file[
+    ~gaussian_file["run"].between(162,171)
+].copy()
 # Apply corrected grouping
 gaussian_file = regroup_gaussian_trials(gaussian_file)
 gaussian_summary = summarize(gaussian_file)
