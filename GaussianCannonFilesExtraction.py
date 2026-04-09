@@ -80,7 +80,7 @@ def assign_gaussian_conditions(row):
         elif 21 <= run <= 30:
             return pd.Series([1, 10.803, 10.803, 8, 21, 30, "Run 21-30"])
         elif 31 <= run <= 40:
-            return pd.Series([1, 10.925, 10.295, 6, 31, 40, "Run 31-40"])
+            return pd.Series([1, 10.295, 10.295, 6, 31, 40, "Run 31-40"])
 
     # -------- 04-02-2026 : 2 and 3 stations --------
     elif source == "gaussian_all_stations":
