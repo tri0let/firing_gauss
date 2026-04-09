@@ -2,36 +2,31 @@ import pandas as pd
 import re
 import math
 import os
-
 # ========= FILE PATHS ==========
 folder = "csv_data"
-
 file_gaussian_first_station = os.path.join(
     folder,
     "4-01-2026_gaussian_cannon_1st_station[speed_time_between_gatesx40].csv"
 )
-
 file_gaussian_all_stations = os.path.join(
     folder,
     "04-02-2026_gaussian_cannon_all_stations[speed_time_between_stationsx191].csv"
 )
-
 file_nomagnet = os.path.join(
     folder,
     "3-31-2026_No_Magnets_Station[Speed_Time_Between_Gatesx7].csv"
 )
-
 # ========= LOAD FILES ==========
 df_gaussian_first_station = pd.read_csv(file_gaussian_first_station)
 df_gaussian_all_stations = pd.read_csv(file_gaussian_all_stations)
 df_nomagnet = pd.read_csv(file_nomagnet)
 
-
 # ========= EXTRACT FIRST VALID VALUE PER RUN ==========
 def extract_first_values(df, gate, source_name):
     """
     For one gate pair (for example '1+2' or '3+4'),
-    extract the first non-NaN time and speed value from each run.
+    extract the first non-NaN time and speed value from each run, since some runs have 
+    more than one speed value since the ball bounces back 
     """
     runs = sorted({
         int(m.group(1))
@@ -67,7 +62,7 @@ def extract_first_values(df, gate, source_name):
     return out
 
 
-# ========= ASSIGN CONDITIONS ==========
+# ========= ASSIGN MANUAL CONDITIONS ==========
 def assign_gaussian_conditions(row):
     """
     Assign stations, distance, magnets, and run grouping from the user's setup.
@@ -164,7 +159,6 @@ def regroup_nomagnet_trials(df):
     df = df.sort_values(by=["source", "run", "gate"]).reset_index(drop=True)
     return df
 
-
 # ========= SUMMARY FUNCTION ==========
 def summarize(df):
     """
@@ -198,17 +192,13 @@ def summarize(df):
         )
         .reset_index()
     )
-
     summary["sem_speed"] = summary["std_speed"] / summary["n_speed"] ** 0.5
     summary["sem_time"] = summary["std_time"] / summary["n_time"] ** 0.5
-
     summary = summary.sort_values(
         by=["source", "stations", "group_start", "gate"]
     ).reset_index(drop=True)
 
     return summary
-
-
 # ========= PROCESS 4-01-2026 GAUSSIAN FIRST STATION ==========
 g1_12_raw = extract_first_values(
     df_gaussian_first_station,
@@ -220,12 +210,10 @@ g1_34_raw = extract_first_values(
     "3+4",
     "gaussian_first_station"
 )
-
 gaussian_part1_trials = pd.concat([g1_12_raw, g1_34_raw], ignore_index=True)
 gaussian_part1_trials = gaussian_part1_trials.sort_values(
     by=["source", "run", "gate"]
 ).reset_index(drop=True)
-
 gaussian_part1_trials[
     [
         "stations",
@@ -237,15 +225,11 @@ gaussian_part1_trials[
         "group"
     ]
 ] = gaussian_part1_trials.apply(assign_gaussian_conditions, axis=1)
-
 gaussian_part1_trials["distance_start_to_first_photogate"] = pd.NA
-
 gaussian_part1_trials = gaussian_part1_trials.dropna(
     subset=["stations", "distance_stations", "distance_photogates", "magnets", "group"]
 ).reset_index(drop=True)
-
 gaussian_part1_summary = summarize(gaussian_part1_trials)
-
 # ========= PROCESS 04-02-2026 GAUSSIAN ALL STATIONS ==========
 g2_12_raw = extract_first_values(
     df_gaussian_all_stations,
@@ -257,12 +241,10 @@ g2_34_raw = extract_first_values(
     "3+4",
     "gaussian_all_stations"
 )
-
 gaussian_part2_trials = pd.concat([g2_12_raw, g2_34_raw], ignore_index=True)
 gaussian_part2_trials = gaussian_part2_trials.sort_values(
     by=["source", "run", "gate"]
 ).reset_index(drop=True)
-
 gaussian_part2_trials[
     [
         "stations",
@@ -310,7 +292,6 @@ gaussian_part1_summary = gaussian_part1_summary[
         "n_time", "mean_time","std_time", "sem_time"
     ]
 ].copy()
-
 gaussian_all_summary = gaussian_all_summary[
   [
         "source","stations","distance_stations","distance_photogates",
@@ -318,7 +299,6 @@ gaussian_all_summary = gaussian_all_summary[
         "n_time", "mean_time","std_time", "sem_time"
     ]
 ].copy()
-
 nomagnet_summary = nomagnet_summary[
     [
         "source","stations","distance_stations","distance_photogates",
@@ -326,15 +306,14 @@ nomagnet_summary = nomagnet_summary[
         "n_time", "mean_time","std_time", "sem_time"
     ]
 ].copy()
-
-
 # ========= FINAL DATAFRAMES  ==========
 g1 = gaussian_part1_summary.copy()
 g_all = gaussian_all_summary.copy()
 nm = nomagnet_summary.copy()
+
+# =================== SAVE THE SUMMARY DATA FOR ALL MAGNETIC STATIONS SUMMARY AND NO MAGNETS ==============
 gaussian_all_summary.to_csv(os.path.join(folder, "gaussian_cannon_all_stations_summary.csv"), index=False)
 nomagnet_summary.to_csv(os.path.join(folder, "no_magnets_summary.csv"), index=False)
-
 
 # ========= FILE STRUCTURE ==========
 for df in [g1, g_all, nm]:
@@ -347,14 +326,12 @@ for df in [g1, g_all, nm]:
     df["group"] = df["group"].astype(str).str.strip()
 for df in [g_all, nm]:
     df["group_start"] = df["group"].str.extract(r"(\d+)").astype(float)
-
 # SORT DATA
 for df in [g1, g_all, nm]:
     df["group_start"] = df["group"].str.extract(r"(\d+)").astype(float)
 g1 = g1.sort_values(by=["stations", "group_start", "gate"]).reset_index(drop=True)
 g_all = g_all.sort_values(by=["stations", "group_start", "gate"]).reset_index(drop=True)
 nm = nm.sort_values(by=["group_start", "gate"]).reset_index(drop=True)
-
 g1 = g1.drop(columns=["group_start"])
 g_all = g_all.drop(columns=["group_start"])
 nm = nm.drop(columns=["group_start"])
