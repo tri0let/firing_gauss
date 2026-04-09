@@ -79,62 +79,73 @@ def assign_gaussian_conditions(row):
     # -------- 4-01-2026 : 1 station --------
     if source == "gaussian_first_station":
         if 1 <= run <= 10:
-            return pd.Series([1, 9.979, 2, 1, 10, "Run 1-10"])
+            return pd.Series([1, 9.979, 9.279, 2, 1, 10, "Run 1-10"])
         elif 11 <= run <= 20:
-            return pd.Series([1, 9.787, 4, 11, 20, "Run 11-20"])
+            return pd.Series([1, 9.787, 9.787, 4, 11, 20, "Run 11-20"])
         elif 21 <= run <= 30:
-            return pd.Series([1, 10.803, 8, 21, 30, "Run 21-30"])
+            return pd.Series([1, 10.803, 10.803, 8, 21, 30, "Run 21-30"])
         elif 31 <= run <= 40:
-            return pd.Series([1, 10.925, 6, 31, 40, "Run 31-40"])
+            return pd.Series([1, 10.925, 10.295, 6, 31, 40, "Run 31-40"])
 
-    # -------- 04-02-2026 : all stations --------
+    # -------- 04-02-2026 : 2 and 3 stations --------
     elif source == "gaussian_all_stations":
-        # Remove this block completely
+        # remove this block completely
         if 162 <= run <= 171:
-            return pd.Series([None, None, None, None, None, None])
+            return pd.Series([None, None, None, None, None, None, None])
 
         # 2 stations
         if 1 <= run <= 10:
-            return pd.Series([2, 7.05, 2, 1, 10, "Run 1-10"])
+            return pd.Series([2, 7.05, 9.279, 2, 1, 10, "Run 1-10"])
         elif 11 <= run <= 20:
-            return pd.Series([2, 6.54, 4, 11, 20, "Run 11-20"])
+            return pd.Series([2, 6.54, 9.787, 4, 11, 20, "Run 11-20"])
         elif 21 <= run <= 30:
-            return pd.Series([2, 6.03, 6, 21, 30, "Run 21-30"])
+            return pd.Series([2, 6.03, 10.295, 6, 21, 30, "Run 21-30"])
         elif 61 <= run <= 70:
-            return pd.Series([2, 14.61, 2, 61, 70, "Run 61-70"])
+            return pd.Series([2, 14.61, 9.279, 2, 61, 70, "Run 61-70"])
         elif 71 <= run <= 80:
-            return pd.Series([2, 14.10, 4, 71, 80, "Run 71-80"])
+            return pd.Series([2, 14.10, 9.787, 4, 71, 80, "Run 71-80"])
         elif 81 <= run <= 90:
-            return pd.Series([2, 13.59, 6, 81, 90, "Run 81-90"])
+            return pd.Series([2, 13.59, 10.295, 6, 81, 90, "Run 81-90"])
         elif 91 <= run <= 100:
-            return pd.Series([2, 20.80, 2, 91, 100, "Run 91-100"])
+            return pd.Series([2, 20.80, 9.279, 2, 91, 100, "Run 91-100"])
         elif 101 <= run <= 110:
-            return pd.Series([2, 20.29, 4, 101, 110, "Run 101-110"])
+            return pd.Series([2, 20.29, 9.787, 4, 101, 110, "Run 101-110"])
         elif 111 <= run <= 120:
-            return pd.Series([2, 19.78, 6, 111, 120, "Run 111-120"])
+            return pd.Series([2, 19.78, 10.295, 6, 111, 120, "Run 111-120"])
 
         # 3 stations
         elif 31 <= run <= 40:
-            return pd.Series([3, 7.05, 2, 31, 40, "Run 31-40"])
+            return pd.Series([3, 7.05, 9.279, 2, 31, 40, "Run 31-40"])
         elif 41 <= run <= 50:
-            return pd.Series([3, 6.54, 4, 41, 50, "Run 41-50"])
+            return pd.Series([3, 6.54, 9.787, 4, 41, 50, "Run 41-50"])
         elif 51 <= run <= 60:
-            return pd.Series([3, 6.03, 6, 51, 60, "Run 51-60"])
+            return pd.Series([3, 6.03, 10.295, 6, 51, 60, "Run 51-60"])
         elif 121 <= run <= 130:
-            return pd.Series([3, 21.09, 2, 121, 130, "Run 121-130"])
+            return pd.Series([3, 21.09, 9.279, 2, 121, 130, "Run 121-130"])
         elif 131 <= run <= 140:
-            return pd.Series([3, 17.58, 2, 131, 140, "Run 131-140"])
+            return pd.Series([3, 17.58, 9.279, 2, 131, 140, "Run 131-140"])
         elif 141 <= run <= 151:
-            return pd.Series([3, 17.07, 4, 141, 151, "Run 141-151"])
+            return pd.Series([3, 17.07, 9.787, 4, 141, 151, "Run 141-151"])
         elif 152 <= run <= 161:
-            return pd.Series([3, 16.56, 6, 152, 161, "Run 152-161"])
+            return pd.Series([3, 16.56, 10.295, 6, 152, 161, "Run 152-161"])
         elif 172 <= run <= 181:
-            return pd.Series([3, 20.58, 4, 172, 181, "Run 172-181"])
+            return pd.Series([3, 20.58, 9.279, 4, 172, 181, "Run 172-181"])
         elif 182 <= run <= 191:
-            return pd.Series([3, 20.07, 6, 182, 191, "Run 182-191"])
+            return pd.Series([3, 20.07, 10.295, 6, 182, 191, "Run 182-191"])
 
-    return pd.Series([None, None, None, None, None, None])
+    return pd.Series([None, None, None, None, None, None, None])
 
+# ========= NO-MAGNET DISTANCES ==========
+NO_MAGNET_DISTANCE_PHOTOGATES_BY_RUN = {
+    2: 15.05,
+    3: 28.15,
+    4: 29.15,
+    5: 42.20,
+    6: 43.25,
+    7: 56.35,
+    8: 57.40,
+}
+NO_MAGNET_DISTANCE_START_TO_FIRST_PHOTOGATE = 22.40
 
 # ========= NO-MAGNET GROUPING ==========
 def regroup_nomagnet_trials(df):
@@ -143,7 +154,9 @@ def regroup_nomagnet_trials(df):
     """
     df = df.copy()
     df["stations"] = 0
-    df["distance"] = pd.NA
+    df["distance_stations"] = 0.0
+    df["distance_photogates"] = df["run"].map(NO_MAGNET_DISTANCE_PHOTOGATES_BY_RUN)
+    df["distance_start_to_first_photogate"] = NO_MAGNET_DISTANCE_START_TO_FIRST_PHOTOGATE
     df["magnets"] = 0
     df["group_start"] = df["run"].min()
     df["group_end"] = df["run"].max()
@@ -161,7 +174,17 @@ def summarize(df):
 
     summary = (
         df.groupby(
-            ["source", "stations", "distance", "magnets", "group_start", "group_end", "group", "gate"],
+            [
+                "source",
+                "stations",
+                "distance_stations",
+                "distance_photogates",
+                "magnets",
+                "group_start",
+                "group_end",
+                "group",
+                "gate"
+            ],
             sort=True,
             dropna=False
         )
@@ -204,15 +227,24 @@ gaussian_part1_trials = gaussian_part1_trials.sort_values(
 ).reset_index(drop=True)
 
 gaussian_part1_trials[
-    ["stations", "distance", "magnets", "group_start", "group_end", "group"]
+    [
+        "stations",
+        "distance_stations",
+        "distance_photogates",
+        "magnets",
+        "group_start",
+        "group_end",
+        "group"
+    ]
 ] = gaussian_part1_trials.apply(assign_gaussian_conditions, axis=1)
 
+gaussian_part1_trials["distance_start_to_first_photogate"] = pd.NA
+
 gaussian_part1_trials = gaussian_part1_trials.dropna(
-    subset=["stations", "distance", "magnets", "group"]
+    subset=["stations", "distance_stations", "distance_photogates", "magnets", "group"]
 ).reset_index(drop=True)
 
 gaussian_part1_summary = summarize(gaussian_part1_trials)
-
 
 # ========= PROCESS 04-02-2026 GAUSSIAN ALL STATIONS ==========
 g2_12_raw = extract_first_values(
@@ -232,15 +264,24 @@ gaussian_part2_trials = gaussian_part2_trials.sort_values(
 ).reset_index(drop=True)
 
 gaussian_part2_trials[
-    ["stations", "distance", "magnets", "group_start", "group_end", "group"]
+    [
+        "stations",
+        "distance_stations",
+        "distance_photogates",
+        "magnets",
+        "group_start",
+        "group_end",
+        "group"
+    ]
 ] = gaussian_part2_trials.apply(assign_gaussian_conditions, axis=1)
 
+gaussian_part2_trials["distance_start_to_first_photogate"] = pd.NA
+
 gaussian_part2_trials = gaussian_part2_trials.dropna(
-    subset=["stations", "distance", "magnets", "group"]
+    subset=["stations", "distance_stations", "distance_photogates", "magnets", "group"]
 ).reset_index(drop=True)
 
 gaussian_part2_summary = summarize(gaussian_part2_trials)
-
 
 # =========  GAUSSIAN SUMMARIES ==========
 gaussian_all_trials = pd.concat(
@@ -249,7 +290,6 @@ gaussian_all_trials = pd.concat(
 ).sort_values(by=["source", "stations", "group_start", "run", "gate"]).reset_index(drop=True)
 
 gaussian_all_summary = summarize(gaussian_all_trials)
-
 
 # ========= PROCESS NO-MAGNET FILE ==========
 nm_12_raw = extract_first_values(df_nomagnet, "1+2", "no_magnets")
@@ -262,48 +302,59 @@ nomagnet_trials = nomagnet_trials.sort_values(
 
 nomagnet_trials = regroup_nomagnet_trials(nomagnet_trials)
 nomagnet_summary = summarize(nomagnet_trials)
-
-
 # ========= SUMMARY COLUMNS ==========
 gaussian_part1_summary = gaussian_part1_summary[
-    [
-        "source", "stations", "distance", "magnets",
-        "group", "gate",
-        "n_speed", "mean_speed", "std_speed", "sem_speed",
-        "n_time", "mean_time", "std_time", "sem_time"
+  [
+        "source","stations","distance_stations","distance_photogates",
+        "magnets","group", "gate","n_speed","mean_speed","std_speed", "sem_speed",
+        "n_time", "mean_time","std_time", "sem_time"
     ]
 ].copy()
 
 gaussian_all_summary = gaussian_all_summary[
-    [
-        "source", "stations", "distance", "magnets",
-        "group", "gate",
-        "n_speed", "mean_speed", "std_speed", "sem_speed",
-        "n_time", "mean_time", "std_time", "sem_time"
+  [
+        "source","stations","distance_stations","distance_photogates",
+        "magnets","group", "gate","n_speed","mean_speed","std_speed", "sem_speed",
+        "n_time", "mean_time","std_time", "sem_time"
     ]
 ].copy()
 
 nomagnet_summary = nomagnet_summary[
     [
-        "source", "stations", "distance", "magnets",
-        "group", "gate",
-        "n_speed", "mean_speed", "std_speed", "sem_speed",
-        "n_time", "mean_time", "std_time", "sem_time"
+        "source","stations","distance_stations","distance_photogates",
+        "magnets","group", "gate","n_speed","mean_speed","std_speed", "sem_speed",
+        "n_time", "mean_time","std_time", "sem_time"
     ]
 ].copy()
 
 
 # ========= FINAL DATAFRAMES  ==========
+g1 = gaussian_part1_summary.copy()
+g_all = gaussian_all_summary.copy()
+nm = nomagnet_summary.copy()
 gaussian_all_summary.to_csv(os.path.join(folder, "gaussian_cannon_all_stations_summary.csv"), index=False)
 nomagnet_summary.to_csv(os.path.join(folder, "no_magnets_summary.csv"), index=False)
 
 
 # ========= FILE STRUCTURE ==========
-for df in [gaussian_all_summary, nomagnet_summary]:
+for df in [g1, g_all, nm]:
     df["mean_speed"] = pd.to_numeric(df["mean_speed"], errors="coerce")
     df["sem_speed"] = pd.to_numeric(df["sem_speed"], errors="coerce")
     df["stations"] = pd.to_numeric(df["stations"], errors="coerce")
-    df["distance"] = pd.to_numeric(df["distance"], errors="coerce")
+    df["distance_stations"] = pd.to_numeric(df["distance_stations"], errors="coerce")
+    df["distance_photogates"] = pd.to_numeric(df["distance_photogates"], errors="coerce")
     df["magnets"] = pd.to_numeric(df["magnets"], errors="coerce")
     df["group"] = df["group"].astype(str).str.strip()
+for df in [g_all, nm]:
+    df["group_start"] = df["group"].str.extract(r"(\d+)").astype(float)
 
+# SORT DATA
+for df in [g1, g_all, nm]:
+    df["group_start"] = df["group"].str.extract(r"(\d+)").astype(float)
+g1 = g1.sort_values(by=["stations", "group_start", "gate"]).reset_index(drop=True)
+g_all = g_all.sort_values(by=["stations", "group_start", "gate"]).reset_index(drop=True)
+nm = nm.sort_values(by=["group_start", "gate"]).reset_index(drop=True)
+
+g1 = g1.drop(columns=["group_start"])
+g_all = g_all.drop(columns=["group_start"])
+nm = nm.drop(columns=["group_start"])
