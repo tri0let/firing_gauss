@@ -75,14 +75,16 @@ def friction_work_after(final_distance, friction_force, num_balls):
 
 def energy_loss(initial_kinetic_energy, D, B):
     if D < 0:
-        raise ValueError('D must be non-negative!')
+        raise ValueError(f'D must be non-negative! Value: {D}')
     return D * initial_kinetic_energy + B
 
 def DeltaK(initial_distance, initial_kinetic_energy, final_distance, num_magnets, num_balls, friction_force, C, D, B):
-    delta_K_before = magnetic_work_before(initial_distance, C, num_magnets) + friction_work_before(initial_distance, friction_force)
+    delta_K_before = magnetic_work_before(initial_distance=initial_distance, C=C, num_magnets=num_magnets) + friction_work_before(initial_distance=initial_distance, friction_force=friction_force)
     K_collision = initial_kinetic_energy + delta_K_before
-    delta_K_after = magnetic_work_after(final_distance, C, num_magnets, num_balls) + friction_work_after(final_distance, friction_force, num_balls)
-    E_loss = energy_loss(K_collision, D, B)
-
+    delta_K_after = magnetic_work_after(final_distance=final_distance, C=C, num_magnets=num_magnets, num_balls=num_balls) + friction_work_after(final_distance=final_distance, friction_force=friction_force, num_balls=num_balls)
+    E_loss = energy_loss(initial_kinetic_energy=K_collision, D=D, B=B)
+    
     return delta_K_before + delta_K_after - E_loss
+
+DeltaK = np.vectorize(DeltaK)
 

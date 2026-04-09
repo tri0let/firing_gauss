@@ -306,6 +306,7 @@ def FitSituation(x, data_dict, parameters, model='linear'):
     red_chi2 = chi2 / dof if dof > 0 else np.nan
 
     return {
+        'conditions': parameters,
         'model': model,
         'function': fit_function,
         'params': popt,
@@ -399,7 +400,7 @@ def PlotCategoryOnAxis(ax, results_list, title, xlabel, model=None, ylim=None, y
     return fit_results
 
 
-def PlotCategoryFamily(results, keys, family_title, xlabel, ylabel=None, model=None, max_cols=3):
+def PlotCategoryFamily(results, keys, family_title, xlabel, ylabel=None, model=None, max_cols=3, show=True):
     if not keys:
         return {}
 
@@ -421,7 +422,8 @@ def PlotCategoryFamily(results, keys, family_title, xlabel, ylabel=None, model=N
         ax.set_visible(False)
 
     fig.suptitle(family_title, fontsize=18)
-    plt.show()
+    if show:
+        plt.show()
 
     return fit_results
 
