@@ -107,7 +107,7 @@ def f_6(z, C, h):
 def model_fit(z, C, n):
     z = np.asarray(z, dtype=np.float64) / 1000
     C = float(C)
-    n = np.asarray(n, dtype=int)
+    n = np.asarray(n)
     a = mag_radius
     D = mag_thickness
     R = ball_radius

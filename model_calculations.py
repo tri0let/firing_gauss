@@ -100,7 +100,7 @@ def GetEnergyLossConstant(data_list_with_fit):
 
         return np.array(delta_K_list)
     
-    x = [2, 4, 8]
+    x = [2, 4]
     y = []
     yerr = []
 
@@ -193,6 +193,7 @@ def AddProperDistancesAndEnergies(dataframe):
             dataframe.loc[i, 'xf_between_stations'] = distance_stations / 100 - ball_diameter - num_balls * mag_thickness
     
     dataframe['K_init'] = 0.5 * ball_mass * dataframe['mean_speed_in']**2
+    dataframe['K_final'] = 0.5 * ball_mass * dataframe['mean_speed_out']**2
 
     return dataframe
 
@@ -297,8 +298,10 @@ def AddPredictedEnergy(dataframe):
         
         print(f'After final station: {kinetic_energy}')
         print('=' * 50)
+
+        dataframe.loc[i, 'K_pred'] = kinetic_energy
         
-        dataframe.loc[i, 'predicted_velocity_out'] = np.sqrt(2 * kinetic_energy / ball_mass)
+        dataframe.loc[i, 'speed_pred'] = np.sqrt(2 * kinetic_energy / ball_mass)
 
         dataframe.loc[i, 'predicted_energy_gain'] = kinetic_energy - k0
 
@@ -326,7 +329,7 @@ def main():
 
     new = AddPredictedEnergy(new)
 
-    print(new[['stations', 'magnets', 'distance_stations', 'mean_speed_out', 'predicted_velocity_out']])
+    print(new[['stations', 'magnets', 'distance_stations', 'mean_speed_out', 'speed_pred', 'K_final', 'K_pred']])
 
 
 if __name__ == '__main__':
